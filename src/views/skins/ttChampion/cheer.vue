@@ -89,7 +89,7 @@ export default {
           {
             type: "number",
             min: 1,
-            max: 100,
+            max: 10000,
             message: "请输入合理的奖励倍数",
             trigger: "blur"
           }
@@ -99,7 +99,7 @@ export default {
           {
             type: "number",
             min: 0,
-            max: 1,
+            max: 10000,
             message: "请输入合理的积分比例",
             trigger: "blur"
           }
