@@ -296,7 +296,7 @@ export default {
       ids: [],
       types: {
         userType: "01",
-        pageSize: 99
+        pageSize: 1000
       },
       // 非单个禁用
       single: true,

@@ -366,7 +366,7 @@
         <el-table-column align="center" property="usePrice" label="金额"></el-table-column>
         <el-table-column align="center" property="address" label="封面">
           <template slot-scope="scope">
-            <img :src="scope.row.imageUrl" alt width="40px" height="40px" />
+            <img :src="scope.row.imageUrl" alt width="40px" height="40px" referrerpolicy="no-referrer" />
           </template>
         </el-table-column>
         <el-table-column align="center" property="oddsPercentum" label="爆率"></el-table-column>

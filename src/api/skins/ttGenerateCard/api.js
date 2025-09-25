@@ -21,3 +21,19 @@ export function downloadRechargeCard() {
     method:'post'
  })
 }
+
+export function generateCardInfo(data) {
+  return request({
+    url: '/admin/rechargeCard/info',
+    method: 'post',
+    data: data
+  })
+}
+
+export function createGenerateCard(data) {
+  return request({
+    url: '/admin/rechargeCard/create',
+    method: 'post',
+    data: data
+  })
+}

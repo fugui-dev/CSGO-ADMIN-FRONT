@@ -65,6 +65,15 @@
       <el-form-item>
         <el-button type="primary" icon="el-icon-search" size="mini" @click="handleQuery">搜索</el-button>
         <el-button icon="el-icon-refresh" size="mini" @click="resetQuery">重置</el-button>
+        <el-button 
+          v-if="queryParams.parentId" 
+          type="success" 
+          icon="el-icon-key" 
+          size="mini" 
+          @click="generateCardPassword"
+        >
+          生成卡密
+        </el-button>
       </el-form-item>
     </el-form>
     <el-table :data="tableData" style="width: 100%" v-loading="loading">
@@ -128,18 +137,21 @@
 <script>
 import { rechargeRecord } from "@/api/skins/ttRecharge/api";
 import { listUser } from "@/api/skins/ttuser/api";
+import { generateCardInfo, createGenerateCard } from "@/api/skins/ttGenerateCard/api";
+import { getInfo } from "@/api/login";
 
 export default {
   data() {
     return {
       types: {
         userType: "01",
-        pageSize: 99
+        pageSize: 1000
       },
       total: 1,
       loading: false,
       tableData: [],
       userList: [],
+      isSystemOperation: false, // 是否为system-operation角色
       queryParams: {
         anchorVirtual: null,
         pageNum: 1,
@@ -155,10 +167,23 @@ export default {
     };
   },
   mounted() {
+    this.checkUserRole();
     this.getList();
-    this.getUser();
+    // 延迟获取用户列表，确保用户信息已加载
+    this.$nextTick(() => {
+      this.getUser();
+    });
   },
   methods: {
+    // 检查用户角色
+    checkUserRole() {
+      const roles = this.$store.getters.roles;
+      // 角色是字符串数组，直接检查是否包含'system-operation'
+      this.isSystemOperation = roles && roles.includes('system-operation');
+      console.log('用户角色:', roles);
+      console.log('是否为system-operation:', this.isSystemOperation);
+    },
+    
     resetQuery() {
       this.queryParams = {
         pageNum: 1,
@@ -179,19 +204,126 @@ export default {
       this.getList();
     },
     getUser() {
-      listUser(this.types).then(res => {
-        this.userList = res.rows;
-      });
-      rollJackpotList().then(res => {
-        this.JackpotList = res.rows;
-      });
+      const queryParams = { ...this.types };
+      
+      // 如果是system-operation角色，添加parentId参数
+      if (this.isSystemOperation) {
+        // 调用/getInfo接口获取用户信息
+        getInfo().then(res => {
+          const userInfo = res.user;
+          const currentUserId = userInfo && userInfo.userId;
+          console.log('用户信息:', userInfo);
+          console.log('当前用户ID:', currentUserId);
+          
+          if (currentUserId) {
+            queryParams.parentId = currentUserId;
+            console.log('添加parentId参数:', currentUserId);
+          } else {
+            console.log('用户ID为空，无法添加parentId参数');
+          }
+          
+          console.log('查询主播列表参数:', queryParams);
+          listUser(queryParams).then(res => {
+            this.userList = res.rows;
+            console.log('获取到的主播列表:', res.rows);
+          });
+        }).catch(error => {
+          console.error('获取用户信息失败:', error);
+          // 如果获取用户信息失败，仍然调用listUser但不添加parentId
+          listUser(queryParams).then(res => {
+            this.userList = res.rows;
+            console.log('获取到的主播列表:', res.rows);
+          });
+        });
+      } else {
+        // 非system-operation角色，直接调用listUser
+        console.log('查询主播列表参数:', queryParams);
+        listUser(queryParams).then(res => {
+          this.userList = res.rows;
+          console.log('获取到的主播列表:', res.rows);
+        });
+      }
     },
     getList() {
       this.loading = true;
-      rechargeRecord(this.queryParams).then(res => {
+      
+      const queryParams = { ...this.queryParams };
+      
+      // 如果是system-operation角色且主播列表不为空，添加parentList参数
+      if (this.isSystemOperation && this.userList.length > 0) {
+        queryParams.parentList = this.userList.map(item => item.userId);
+        console.log('添加parentList参数:', queryParams.parentList);
+      } else if (this.isSystemOperation && this.userList.length === 0) {
+        console.log('主播列表为空，不查询充值记录');
+        this.tableData = [];
+        this.total = 0;
+        this.loading = false;
+        return;
+      }
+      
+      console.log('查询充值记录参数:', queryParams);
+      rechargeRecord(queryParams).then(res => {
         this.tableData = res.rows;
         this.total = res.total;
         this.loading = false;
+        console.log('获取到的充值记录:', res.rows);
+      });
+    },
+    generateCardPassword() {
+      if (!this.queryParams.parentId) {
+        this.$modal.msgWarning("请先选择主播！");
+        return;
+      }
+      
+      // 先获取卡密信息
+      const data = {
+        userId: this.queryParams.parentId
+      };
+      
+      generateCardInfo(data).then(res => {
+        if (res.success) {
+          const cardInfo = res.data;
+          if (cardInfo) {
+            // 显示卡密信息确认弹框
+            this.$confirm(
+              `充值总额：${cardInfo.rechargeTotal}元\n价格：${cardInfo.price}元\n\n确认要生成卡密吗？`,
+              '卡密信息确认',
+              {
+                confirmButtonText: '确定',
+                cancelButtonText: '取消',
+                type: 'info'
+              }
+            ).then(() => {
+              // 用户点击确定，调用创建卡密接口
+              this.createCard(cardInfo);
+            }).catch(() => {
+              this.$modal.msgInfo("已取消生成卡密");
+            });
+          } else {
+            this.$modal.msgError("获取卡密信息失败！");
+          }
+        } else {
+          this.$modal.msgError(res.errMessage || "获取卡密信息失败！");
+        }
+      }).catch(error => {
+        this.$modal.msgError("获取卡密信息失败：" + error.message);
+      });
+    },
+    
+    createCard(cardInfo) {
+      const data = {
+        userId: this.queryParams.parentId
+      };
+      
+      createGenerateCard(data).then(res => {
+        if (res.success) {
+          this.$modal.msgSuccess("卡密生成成功！");
+          console.log("卡密生成结果：", res.data);
+        } else {
+          this.$modal.msgError(res.errMessage || "生成卡密失败！");
+        }
+      }).catch(error => {
+        this.$modal.msgError("生成卡密失败：" + error.message);
       });
     }
   }

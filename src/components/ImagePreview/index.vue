@@ -4,6 +4,7 @@
     fit="cover"
     :style="`width:${realWidth};height:${realHeight};`"
     :preview-src-list="realSrcList"
+    referrerpolicy="no-referrer"
   >
     <div slot="error" class="image-slot">
       <i class="el-icon-picture-outline"></i>

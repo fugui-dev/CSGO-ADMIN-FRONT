@@ -137,6 +137,7 @@ import {
   statisticsPromotionData
 } from "@/api/skins/ttuser/api";
 import { listUser } from "@/api/skins/ttuser/api";
+import { getInfo } from "@/api/login";
 import * as echarts from "echarts";
 
 export default {
@@ -147,6 +148,7 @@ export default {
       labelPosition: "week",
       formRecoard: {},
       value: null,
+      isSystemOperation: false, // 是否为system-operation角色
       // 遮罩层
       loading: true,
       // 选中数组
@@ -219,9 +221,18 @@ export default {
     };
   },
   created() {
+    this.checkUserRole();
     this.getList();
   },
   methods: {
+    // 检查用户角色
+    checkUserRole() {
+      const roles = this.$store.getters.roles;
+      this.isSystemOperation = roles && roles.includes('system-operation');
+      console.log('用户角色:', roles);
+      console.log('是否为system-operation:', this.isSystemOperation);
+    },
+    
     handleChange() {
       if (this.labelPosition == "month") {
         let value = [];
@@ -341,11 +352,49 @@ export default {
     /** 查询推广记录数据列表 */
     getList() {
       this.loading = true;
-      getPromotionRecord(this.queryParams).then(response => {
-        this.recordList = response.rows;
-        this.total = response.total;
-        this.loading = false;
-      });
+      
+      const queryParams = { ...this.queryParams };
+      
+      // 如果是system-operation角色，添加parentId参数
+      if (this.isSystemOperation) {
+        getInfo().then(res => {
+          const userInfo = res.user;
+          const currentUserId = userInfo && userInfo.userId;
+          console.log('用户信息:', userInfo);
+          console.log('当前用户ID:', currentUserId);
+          
+          if (currentUserId) {
+            queryParams.parentId = currentUserId;
+            console.log('添加parentId参数:', currentUserId);
+          } else {
+            console.log('用户ID为空，无法添加parentId参数');
+          }
+          
+          console.log('查询推广记录参数:', queryParams);
+          getPromotionRecord(queryParams).then(response => {
+            this.recordList = response.rows;
+            this.total = response.total;
+            this.loading = false;
+            console.log('获取到的推广记录:', response.rows);
+          });
+        }).catch(error => {
+          console.error('获取用户信息失败:', error);
+          getPromotionRecord(queryParams).then(response => {
+            this.recordList = response.rows;
+            this.total = response.total;
+            this.loading = false;
+          });
+        });
+      } else {
+        console.log('查询推广记录参数:', queryParams);
+        getPromotionRecord(queryParams).then(response => {
+          this.recordList = response.rows;
+          this.total = response.total;
+          this.loading = false;
+        });
+      }
+      
+      // 获取用户列表（用于下拉选择）
       listUser(this.userParams).then(response => {
         this.userList = response.rows;
       });

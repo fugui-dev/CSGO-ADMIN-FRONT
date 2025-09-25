@@ -73,12 +73,12 @@
         <el-table-column align="center" property="boxId" label="宝箱ID	"></el-table-column>
         <el-table-column align="center" property="boxImg01" label="宝箱图片1">
           <template slot-scope="scope">
-            <img :src="scope.row.boxImg01" alt width="50px" />
+            <img :src="scope.row.boxImg01" alt width="50px" referrerpolicy="no-referrer" />
           </template>
         </el-table-column>
         <el-table-column align="center" property="boxImg02" label="宝箱图片2">
           <template slot-scope="scope">
-            <img :src="scope.row.boxImg02" alt width="50px" />
+            <img :src="scope.row.boxImg02" alt width="50px" referrerpolicy="no-referrer" />
           </template>
         </el-table-column>
         <el-table-column align="center" property="boxName" label="宝箱名称"></el-table-column>

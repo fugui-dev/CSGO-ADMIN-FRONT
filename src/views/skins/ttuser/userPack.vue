@@ -125,6 +125,7 @@
 
 <script>
 import { getPackSack, removeUserPackSackData } from "@/api/skins/ttuser/api";
+import { getInfo } from "@/api/login";
 
 export default {
   name: "User",
@@ -132,7 +133,7 @@ export default {
   data() {
     return {
       multiple: true,
-
+      isSystemOperation: false, // 是否为system-operation角色
       ids: [],
       openView: false,
       newNumber: 1,
@@ -206,9 +207,18 @@ export default {
     };
   },
   created() {
+    this.checkUserRole();
     this.getList();
   },
   methods: {
+    // 检查用户角色
+    checkUserRole() {
+      const roles = this.$store.getters.roles;
+      this.isSystemOperation = roles && roles.includes('system-operation');
+      console.log('用户角色:', roles);
+      console.log('是否为system-operation:', this.isSystemOperation);
+    },
+    
     handleSelectionChange(selection) {
       this.ids = selection.map(item => item.id);
       this.single = selection.length !== 1;
@@ -229,11 +239,47 @@ export default {
     },
     getList() {
       this.loading = true;
-      getPackSack(this.queryParams).then(response => {
-        this.userList = response.rows;
-        this.total = response.total;
-        this.loading = false;
-      });
+      
+      const queryParams = { ...this.queryParams };
+      
+      // 如果是system-operation角色，添加parentId参数
+      if (this.isSystemOperation) {
+        getInfo().then(res => {
+          const userInfo = res.user;
+          const currentUserId = userInfo && userInfo.userId;
+          console.log('用户信息:', userInfo);
+          console.log('当前用户ID:', currentUserId);
+          
+          if (currentUserId) {
+            queryParams.parentId = currentUserId;
+            console.log('添加parentId参数:', currentUserId);
+          } else {
+            console.log('用户ID为空，无法添加parentId参数');
+          }
+          
+          console.log('查询背包列表参数:', queryParams);
+          getPackSack(queryParams).then(response => {
+            this.userList = response.rows;
+            this.total = response.total;
+            this.loading = false;
+            console.log('获取到的背包列表:', response.rows);
+          });
+        }).catch(error => {
+          console.error('获取用户信息失败:', error);
+          getPackSack(queryParams).then(response => {
+            this.userList = response.rows;
+            this.total = response.total;
+            this.loading = false;
+          });
+        });
+      } else {
+        console.log('查询背包列表参数:', queryParams);
+        getPackSack(queryParams).then(response => {
+          this.userList = response.rows;
+          this.total = response.total;
+          this.loading = false;
+        });
+      }
     },
     // 取消按钮
     cancel() {
