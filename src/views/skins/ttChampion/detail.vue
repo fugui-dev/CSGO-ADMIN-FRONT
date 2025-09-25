@@ -142,7 +142,7 @@ export default {
       if (Number.isNaN(matchId)) return;
 
       getTeamListApi({
-        matchId: matchId.value,
+        matchId: matchId,
         champion: false
       }).then(res => {
         if (res.data && res.data.length) {
