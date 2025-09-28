@@ -99,6 +99,8 @@ export default {
   },
   created() {
     this.getList();
+    // 页面加载时就获取默认标签页（比赛队伍）的数据
+    this.getTeamRank();
   },
   methods: {
     // 获取比赛阶段列表

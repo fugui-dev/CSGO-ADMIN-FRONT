@@ -162,6 +162,19 @@ export const dynamicRoutes = [
         meta: { title: '修改生成配置', activeMenu: '/tool/gen' }
       }
     ]
+  },
+  {
+    path: '/champion',
+    component: Layout,
+    hidden: true,
+    children: [
+      {
+        path: 'matchDetail',
+        component: () => import('@/views/skins/ttChampion/detail'),
+        name: 'MatchDetail',
+        meta: { title: '比赛详情' }
+      }
+    ]
   }
 ]
 
