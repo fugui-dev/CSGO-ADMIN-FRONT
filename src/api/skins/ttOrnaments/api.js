@@ -94,3 +94,19 @@ export function addWebsiteProperty(data) {
   })
 }
 
+// 获取所有外观列表（从饰品表查询）
+export function getExteriorList() {
+  return request({
+    url: '/admin/ornaments/exterior/list',
+    method: 'get'
+  })
+}
+
+// 获取所有类型列表（从饰品表查询）
+export function getTypeList() {
+  return request({
+    url: '/admin/ornaments/type/list',
+    method: 'get'
+  })
+}
+

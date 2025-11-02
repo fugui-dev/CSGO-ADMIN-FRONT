@@ -1,6 +1,11 @@
 <template>
   <div class="home">
     <el-form :model="queryParams" ref="queryForm" size="small" :inline="true">
+      <el-form-item label="发货平台">
+        <el-select v-model="partyType" placeholder="请选择发货平台" @change="handleQuery">
+          <el-option label="CS2PIFA" value="7"></el-option>
+        </el-select>
+      </el-form-item>
       <el-form-item label="发货" prop="phoneNumber">
         <el-select v-model="queryParams.delivery" placeholder="请选择发货模式" clearable>
           <el-option
@@ -132,6 +137,7 @@ export default {
   dicts: ["delivery_way", "sale_sorting"],
   data() {
     return {
+      partyType: "7", // 默认CS2PIFA
       total: 1,
       loading: false,
       formAdd: {},
@@ -191,7 +197,7 @@ export default {
       let aa = {
         productId: res.id,
         deliveryRecordId: this.t_id,
-        partyType: 1
+        partyType: parseInt(this.partyType)
       };
       this.$confirm("确定购买发货？", "提示", {
         confirmButtonText: "确定",
@@ -240,7 +246,7 @@ export default {
     getList() {
       this.loading = true;
       let data = {
-        partyType: 1,
+        partyType: parseInt(this.partyType),
         ornamentsId: []
       }
       data.ornamentsId.push(this.id);

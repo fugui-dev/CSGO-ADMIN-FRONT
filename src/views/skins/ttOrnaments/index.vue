@@ -17,20 +17,20 @@
       <el-form-item label="外观">
         <el-select v-model="queryParams.exterior" placeholder="请选择" clearable>
           <el-option
-            v-for="dict in dict.type.ornaments_exterior_name"
-            :key="dict.value"
-            :label="dict.label"
-            :value="dict.value"
+            v-for="item in exteriorList"
+            :key="item.value"
+            :label="item.label"
+            :value="item.value"
           />
         </el-select>
       </el-form-item>
       <el-form-item label="类型">
         <el-select v-model="queryParams.type" placeholder="请选择" clearable>
           <el-option
-            v-for="dict in dict.type.ornaments_type_name"
-            :key="dict.value"
-            :label="dict.label"
-            :value="dict.value"
+            v-for="item in typeList"
+            :key="item.value"
+            :label="item.label"
+            :value="item.value"
           />
         </el-select>
       </el-form-item>
@@ -70,7 +70,7 @@
       </el-table-column>
       <el-table-column align="center" label="稀有度">
         <template slot-scope="scope">
-          <el-tag :color="scope.row.rarityColor" style="color: #fff;">{{ scope.row.rarityName }}</el-tag>
+          <el-tag :color="getRarityColorByType(scope.row)" style="color: #fff;">{{ scope.row.rarityName }}</el-tag>
         </template>
       </el-table-column>
       <el-table-column align="center" label="封面">
@@ -83,6 +83,7 @@
           <el-tag>{{ scope.row.typeName }}</el-tag>
         </template>
       </el-table-column>
+      <el-table-column align="center" label="同步价格" prop="price" />
       <el-table-column align="center" label="本站价格" prop="usePrice" />
       <el-table-column align="center" label="在售数量" prop="quantity" />
       <el-table-column align="center" label="更新时间" prop="updateTime" />
@@ -353,7 +354,9 @@ import {
   getOrnaments,
   listOrnaments,
   updateOrnaments,
-  grantOrnaments
+  grantOrnaments,
+  getExteriorList,
+  getTypeList
 } from "@/api/skins/ttOrnaments/api";
 import { listLevel } from "@/api/skins/ttOrnamentsLevel/api";
 
@@ -370,6 +373,121 @@ export default {
     return {
       //
       listLevel: [],
+      // 外观列表（从饰品表查询）
+      exteriorList: [],
+      // 类型列表（从饰品表查询）
+      typeList: [],
+      // 不同类型下稀有度的颜色映射配置
+      // 格式: { type: { rarityName: color } }
+      // 支持中英文名称
+      rarityColorMap: {
+        // 匕首 (type: 1)
+        "1": {
+          "Consumer Grade": "#B0C3D9", // 消费级 - 浅蓝色
+          "消费级": "#B0C3D9",
+          "Industrial Grade": "#5E98D9", // 工业级 - 蓝色
+          "工业级": "#5E98D9",
+          "Mil-Spec Grade": "#4B69FF", // 军用级 - 深蓝色
+          "军用级": "#4B69FF",
+          "Restricted": "#8847FF", // 受限 - 紫色
+          "受限": "#8847FF",
+          "Classified": "#D32CE6", // 保密 - 粉紫色
+          "保密": "#D32CE6",
+          "Covert": "#EB4B4B", // 隐秘 - 红色
+          "隐秘": "#EB4B4B",
+          "Exceedingly Rare": "#FFD700", // 极其罕见 - 金色
+          "极其罕见": "#FFD700",
+          "Contraband": "#E4AE39", // 违禁品 - 金色
+          "违禁品": "#E4AE39",
+          // 其他可能的稀有度名称
+          "大师": "#FFD700", // 大师 - 金色
+          "高级": "#D32CE6", // 高级 - 粉紫色
+        },
+        // 手枪 (type: 2)
+        "2": {
+          "Consumer Grade": "#B0C3D9", "消费级": "#B0C3D9",
+          "Industrial Grade": "#5E98D9", "工业级": "#5E98D9",
+          "Mil-Spec Grade": "#4B69FF", "军用级": "#4B69FF",
+          "Restricted": "#8847FF", "受限": "#8847FF",
+          "Classified": "#D32CE6", "保密": "#D32CE6",
+          "Covert": "#EB4B4B", "隐秘": "#EB4B4B",
+          "Exceedingly Rare": "#FFD700", "极其罕见": "#FFD700",
+          "Contraband": "#E4AE39", "违禁品": "#E4AE39",
+          "大师": "#FFD700", "高级": "#D32CE6",
+        },
+        // 步枪 (type: 3)
+        "3": {
+          "Consumer Grade": "#B0C3D9", "消费级": "#B0C3D9",
+          "Industrial Grade": "#5E98D9", "工业级": "#5E98D9",
+          "Mil-Spec Grade": "#4B69FF", "军用级": "#4B69FF",
+          "Restricted": "#8847FF", "受限": "#8847FF",
+          "Classified": "#D32CE6", "保密": "#D32CE6",
+          "Covert": "#EB4B4B", "隐秘": "#EB4B4B",
+          "Exceedingly Rare": "#FFD700", "极其罕见": "#FFD700",
+          "Contraband": "#E4AE39", "违禁品": "#E4AE39",
+          "大师": "#FFD700", "高级": "#D32CE6",
+        },
+        // 微型冲锋枪 (type: 4)
+        "4": {
+          "Consumer Grade": "#B0C3D9", "消费级": "#B0C3D9",
+          "Industrial Grade": "#5E98D9", "工业级": "#5E98D9",
+          "Mil-Spec Grade": "#4B69FF", "军用级": "#4B69FF",
+          "Restricted": "#8847FF", "受限": "#8847FF",
+          "Classified": "#D32CE6", "保密": "#D32CE6",
+          "Covert": "#EB4B4B", "隐秘": "#EB4B4B",
+          "Exceedingly Rare": "#FFD700", "极其罕见": "#FFD700",
+          "Contraband": "#E4AE39", "违禁品": "#E4AE39",
+          "大师": "#FFD700", "高级": "#D32CE6",
+        },
+        // 重型武器 (type: 5)
+        "5": {
+          "Consumer Grade": "#B0C3D9", "消费级": "#B0C3D9",
+          "Industrial Grade": "#5E98D9", "工业级": "#5E98D9",
+          "Mil-Spec Grade": "#4B69FF", "军用级": "#4B69FF",
+          "Restricted": "#8847FF", "受限": "#8847FF",
+          "Classified": "#D32CE6", "保密": "#D32CE6",
+          "Covert": "#EB4B4B", "隐秘": "#EB4B4B",
+          "Exceedingly Rare": "#FFD700", "极其罕见": "#FFD700",
+          "Contraband": "#E4AE39", "违禁品": "#E4AE39",
+          "大师": "#FFD700", "高级": "#D32CE6",
+        },
+        // 手套 (type: 6) - 可以使用不同的颜色
+        "6": {
+          "Consumer Grade": "#C8C8C8", "消费级": "#C8C8C8", // 消费级 - 银灰色
+          "Industrial Grade": "#5E98D9", "工业级": "#5E98D9", // 工业级 - 蓝色
+          "Mil-Spec Grade": "#4B69FF", "军用级": "#4B69FF", // 军用级 - 深蓝色
+          "Restricted": "#8847FF", "受限": "#8847FF", // 受限 - 紫色
+          "Classified": "#D32CE6", "保密": "#D32CE6", // 保密 - 粉紫色
+          "Covert": "#EB4B4B", "隐秘": "#EB4B4B", // 隐秘 - 红色
+          "Exceedingly Rare": "#FFD700", "极其罕见": "#FFD700", // 极其罕见 - 金色
+          "Contraband": "#E4AE39", "违禁品": "#E4AE39", // 违禁品 - 金色
+          "大师": "#FFD700", "高级": "#D32CE6",
+        },
+        // 印花 (type: 7) - 可以使用不同的颜色
+        "7": {
+          "Consumer Grade": "#E1E1E1", "消费级": "#E1E1E1", // 消费级 - 浅灰色
+          "Industrial Grade": "#5E98D9", "工业级": "#5E98D9", // 工业级 - 蓝色
+          "Mil-Spec Grade": "#4B69FF", "军用级": "#4B69FF", // 军用级 - 深蓝色
+          "Restricted": "#8847FF", "受限": "#8847FF", // 受限 - 紫色
+          "Classified": "#D32CE6", "保密": "#D32CE6", // 保密 - 粉紫色
+          "Covert": "#EB4B4B", "隐秘": "#EB4B4B", // 隐秘 - 红色
+          "Exceedingly Rare": "#FFD700", "极其罕见": "#FFD700", // 极其罕见 - 金色
+          "Contraband": "#E4AE39", "违禁品": "#E4AE39", // 违禁品 - 金色
+          "大师": "#FFD700", "高级": "#D32CE6",
+        },
+        // 其它 (type: 8)
+        "8": {
+          "Consumer Grade": "#B0C3D9", "消费级": "#B0C3D9",
+          "Industrial Grade": "#5E98D9", "工业级": "#5E98D9",
+          "Mil-Spec Grade": "#4B69FF", "军用级": "#4B69FF",
+          "Restricted": "#8847FF", "受限": "#8847FF",
+          "Classified": "#D32CE6", "保密": "#D32CE6",
+          "Covert": "#EB4B4B", "隐秘": "#EB4B4B",
+          "Exceedingly Rare": "#FFD700", "极其罕见": "#FFD700",
+          "Contraband": "#E4AE39", "违禁品": "#E4AE39",
+          "大师": "#FFD700", "高级": "#D32CE6",
+        },
+      },
       //
       dialogFormVisible: false,
       //饰品详情
@@ -451,6 +569,8 @@ export default {
   },
   created() {
     this.getList();
+    this.loadExteriorList();
+    this.loadTypeList();
   },
   methods: {
     cancellation(formName) {
@@ -530,6 +650,75 @@ export default {
         this.total = response.data.total;
         this.loading = false;
       });
+    },
+    /** 加载外观列表 */
+    loadExteriorList() {
+      getExteriorList().then(response => {
+        if (response.code === 200 && response.data) {
+          this.exteriorList = response.data;
+        }
+      }).catch(() => {
+        this.exteriorList = [];
+      });
+    },
+    /** 加载类型列表 */
+    loadTypeList() {
+      getTypeList().then(response => {
+        if (response.code === 200 && response.data) {
+          this.typeList = response.data;
+        }
+      }).catch(() => {
+        this.typeList = [];
+      });
+    },
+    /** 根据类型和稀有度获取颜色 */
+    getRarityColorByType(row) {
+      if (!row || !row.rarityName) {
+        // 如果没有稀有度名称，使用默认颜色
+        return row?.rarityColor || "#909399";
+      }
+
+      const type = String(row.type || "");
+      const rarityName = String(row.rarityName || "").trim();
+
+      // 调试信息
+      if (!this.rarityColorMap[type]) {
+        console.warn('未找到类型配置:', type, '稀有度:', rarityName);
+      }
+
+      // 先尝试根据类型和稀有度名称获取颜色（精确匹配）
+      if (this.rarityColorMap[type] && this.rarityColorMap[type][rarityName]) {
+        return this.rarityColorMap[type][rarityName];
+      }
+
+      // 如果没有找到，尝试模糊匹配（包含关系）
+      if (this.rarityColorMap[type]) {
+        const typeMap = this.rarityColorMap[type];
+        for (const key in typeMap) {
+          if (rarityName.toLowerCase().includes(key.toLowerCase()) || 
+              key.toLowerCase().includes(rarityName.toLowerCase())) {
+            return typeMap[key];
+          }
+        }
+      }
+
+      // 如果还是没有找到，尝试所有类型的通用匹配（忽略类型）
+      for (const typeKey in this.rarityColorMap) {
+        const typeMap = this.rarityColorMap[typeKey];
+        if (typeMap[rarityName]) {
+          return typeMap[rarityName];
+        }
+        // 模糊匹配
+        for (const key in typeMap) {
+          if (rarityName.toLowerCase().includes(key.toLowerCase()) || 
+              key.toLowerCase().includes(rarityName.toLowerCase())) {
+            return typeMap[key];
+          }
+        }
+      }
+
+      // 如果没有找到匹配的颜色，使用数据库中的默认颜色
+      return row.rarityColor || "#909399";
     },
     // 取消按钮
     cancel() {

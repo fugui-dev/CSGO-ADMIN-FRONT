@@ -38,8 +38,8 @@
         <el-col :span="6">
           <div class="box4">
             <div>
-              <h1>${{balance}}</h1>
-              <p>ZBT余额</p>
+              <h1>￥{{balance}}</h1>
+              <p>CS2PIFA余额</p>
             </div>
             <div class="iconall">
               <i class="el-icon-wallet"></i>
@@ -53,48 +53,12 @@
         <div id="main"></div>
       </el-col>
     </el-row>
-    <el-col :span="6">
-      <div class="with-box" v-if="info">
-        <div class="with-header">ZBT信息</div>
-        <div class="with-border">
-          <div class="wite-line">
-            <div>帐号余额</div>
-            <div>{{ info.balance }}</div>
-          </div>
-          <div class="wite-line">
-            <div>余额预警值</div>
-            <div>{{ info.balanceLack }}</div>
-          </div>
-          <div class="wite-line">
-            <div>appKey</div>
-            <div>{{ info.appKey }}</div>
-          </div>
-          <div class="wite-line">
-            <div>appSecret</div>
-            <div>{{ info.appSecret }}</div>
-          </div>
-          <div class="wite-line" @click="handleClick">
-            <div>白名单Ip</div>
-            <div v-if="isShow == false">已隐藏</div>
-            <div v-if="isShow == true" id="ip">{{ info.grantIpList.replaceAll(',', " | ") }}</div>
-          </div>
-          <div class="wite-line">
-            <div>回调地址</div>
-            <div>{{ info.callbackUrl }}</div>
-          </div>
-          <div class="wite-line">
-            <div>当前状态</div>
-            <div v-if="info.status == 'NORMAL'">正常</div>
-          </div>
-        </div>
-      </div>
-    </el-col>
   </div>
 </template>
 
 <script>
 import { listUser_Online } from "@/api/skins/ttuser/api";
-import { getBalance, developmentInfo } from "@/api/index";
+import { getBalance } from "@/api/index";
 import { deliverGoodslist } from "@/api/skins/ttdelivery/api";
 import { rechargeRecord } from "@/api/skins/ttRecharge/api";
 import { getOperationalStatistics } from "@/api/skins/ttSetting/api";
@@ -111,8 +75,6 @@ export default {
       rechargePriceTotal: [],
       totaldeliver: null,
       totalRecord: Number(0),
-      isShow: false,
-      info: null,
       total: null,
       balance: 0,
       // 版本号
@@ -127,9 +89,6 @@ export default {
     this.getList();
   },
   methods: {
-    handleClick(res) {
-      this.isShow = !this.isShow;
-    },
     draw() {
       var chartDom = document.getElementById("main");
       var myChart = echarts.init(chartDom);
@@ -200,11 +159,12 @@ export default {
       }
     },
     getList() {
-      developmentInfo().then(res => {
-        this.info = res.data;
-      });
       getBalance().then(res => {
-        this.balance = Number(res.data.data).toFixed(2);
+        // CS2PIFA返回格式：{code: 200, data: 余额值}
+        this.balance = Number(res.data).toFixed(2);
+      }).catch(err => {
+        console.error('获取余额失败:', err);
+        this.balance = 0;
       });
       listUser_Online(this.queryParams).then(response => {
         this.list = response.rows;

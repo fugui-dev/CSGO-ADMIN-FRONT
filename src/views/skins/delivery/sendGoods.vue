@@ -52,7 +52,18 @@
       </el-table-column>
       <el-table-column align="center" prop="outTradeNo" label="网站订单号"></el-table-column>
       <el-table-column align="center" prop="orderId" label="第三方平台订单号" width="180"></el-table-column>
-      <el-table-column align="center" prop="buyPrice" label="实际购买价格	"></el-table-column>
+      <el-table-column align="center" prop="ornamentsPrice" label="饰品价格">
+        <template slot-scope="scope">
+          <span v-if="scope.row.ornamentsPrice">¥{{ scope.row.ornamentsPrice }}</span>
+          <span v-else>-</span>
+        </template>
+      </el-table-column>
+      <el-table-column align="center" prop="buyPrice" label="实际购买价格	">
+        <template slot-scope="scope">
+          <span v-if="scope.row.buyPrice">¥{{ scope.row.buyPrice }}</span>
+          <span v-else>-</span>
+        </template>
+      </el-table-column>
       <el-table-column align="center" prop="delivery" label="发货方式">
         <template slot-scope="scope">
           <div

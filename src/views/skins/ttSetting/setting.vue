@@ -50,18 +50,22 @@
         <el-tabs type="border-card" size="small">
           <el-tab-pane label="发货设置">
             <el-form ref="form" :model="form">
-              <el-form-item label="渠道">
-                <el-select placeholder="请选择发货渠道"></el-select>
+              <el-form-item label="当前发货渠道">
+                <el-select placeholder="请选择发货渠道" v-model="pt">
+                  <el-option label="CS2PIFA" value="7"></el-option>
+                </el-select>
               </el-form-item>
-              <el-form-item label="ZBT">
-                <el-input v-model="form.zbtparities"></el-input>
-              </el-form-item>
-              <el-form-item label="ZBT平台自动发货价格溢价率">
-                <el-input v-model="form.buyPricePremiumRate"></el-input>
-              </el-form-item>
-              <el-form-item label="ZBT平台自动发货最低价">
-                <el-input v-model="form.autoDeliveryMinPrice"></el-input>
-              </el-form-item>
+              <div v-if="pt==7">
+                <el-form-item label="CS2PIFA平台币种汇率">
+                  <el-input v-model="form.CS2PIFAParities"></el-input>
+                </el-form-item>
+                <el-form-item label="CS2PIFA平台自动发货价格溢价率">
+                  <el-input v-model="form.buyPricePremiumRate"></el-input>
+                </el-form-item>
+                <el-form-item label="CS2PIFA平台自动发货最低价">
+                  <el-input v-model="form.autoDeliveryMinPrice"></el-input>
+                </el-form-item>
+              </div>
             </el-form>
           </el-tab-pane>
         </el-tabs>
@@ -82,6 +86,7 @@ import {
 export default {
   data() {
     return {
+      pt: 7,
       activeName: "first",
       form: {},
       datas: {},

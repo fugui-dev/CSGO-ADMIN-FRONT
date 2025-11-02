@@ -2,13 +2,7 @@ import request from '@/utils/request'
 
 export function getBalance() {
   return request({
-    url: '/admin/zbt/balance',
-    method: 'get',
-  })
-}
-export function developmentInfo() {
-  return request({
-    url: '/admin/zbt/developmentInfo',
+    url: '/admin/CS2PIFA/balance',
     method: 'get',
   })
 }
