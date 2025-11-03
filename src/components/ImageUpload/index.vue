@@ -58,10 +58,10 @@ export default {
        type: Number,
       default: 5,
     },
-    // 文件类型, 例如['png', 'jpg', 'jpeg']
+    // 文件类型, 例如['png', 'jpg', 'jpeg', 'gif']
     fileType: {
       type: Array,
-      default: () => ["png", "jpg", "jpeg"],
+      default: () => ["png", "jpg", "jpeg", "gif"],
     },
     // 是否显示提示
     isShowTip: {
@@ -125,11 +125,14 @@ export default {
       if (this.fileType.length) {
         let fileExtension = "";
         if (file.name.lastIndexOf(".") > -1) {
-          fileExtension = file.name.slice(file.name.lastIndexOf(".") + 1);
+          fileExtension = file.name.slice(file.name.lastIndexOf(".") + 1).toLowerCase();
         }
         isImg = this.fileType.some(type => {
-          if (file.type.indexOf(type) > -1) return true;
-          if (fileExtension && fileExtension.indexOf(type) > -1) return true;
+          const lowerType = type.toLowerCase();
+          // 检查MIME类型（例如 image/gif, image/jpeg）
+          if (file.type && file.type.toLowerCase().indexOf(lowerType) > -1) return true;
+          // 检查文件扩展名（大小写不敏感）
+          if (fileExtension && fileExtension === lowerType) return true;
           return false;
         });
       } else {

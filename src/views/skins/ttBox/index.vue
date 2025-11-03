@@ -300,10 +300,10 @@
           </el-select>
         </el-form-item>
         <el-form-item label="宝箱图片01" prop="boxImg01">
-          <image-upload v-model="form.boxImg01" />
+          <image-upload v-model="form.boxImg01" :file-type="['png', 'jpg', 'jpeg', 'gif']" />
         </el-form-item>
         <el-form-item label="宝箱图片02" prop="boxImg02">
-          <image-upload v-model="form.boxImg02" />
+          <image-upload v-model="form.boxImg02" :file-type="['png', 'jpg', 'jpeg', 'gif']" />
         </el-form-item>
         <el-form-item label="宝箱排序" prop="sort">
           <el-input-number v-model="form.sort" :min="1" :max="1000" label="请选择"></el-input-number>
