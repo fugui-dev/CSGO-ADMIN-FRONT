@@ -49,7 +49,29 @@
           </el-popover>
         </template>
       </el-table-column>
-      <el-table-column align="center" property="usePrice" label="金额"></el-table-column>
+      <el-table-column align="center" property="usePrice" label="饰品原价"></el-table-column>
+      <el-table-column align="center" property="boxPrice" label="宝箱价格">
+        <template slot-scope="scope">
+          <el-popover placement="top" popper-class="layout">
+            <el-row>
+              <div style="text-align: center;">
+                <el-row>
+                  <el-col :span="18">
+                    <el-input-number v-model="scope.row.boxPrice" :precision="2" :min="0" :max="999999" clearable></el-input-number>
+                  </el-col>
+                  <el-col :span="6">
+                    <div style="text-align: right; margin: 0;line-height:36px">
+                      <el-button size="mini" type="text" @click="handleR">取消</el-button>
+                      <el-button type="text" size="mini" @click="handleChangeType(scope.row)">确定</el-button>
+                    </div>
+                  </el-col>
+                </el-row>
+              </div>
+            </el-row>
+            <el-button slot="reference" type="text" class="under">{{scope.row.boxPrice || scope.row.usePrice}}</el-button>
+          </el-popover>
+        </template>
+      </el-table-column>
 
       <el-table-column
         align="center"
@@ -230,6 +252,9 @@
         <el-form-item label="主播数量" :label-width="formLabelWidth">
           <el-input-number v-model="form.anchorOdds" :min="0" :max="10000" label="描述文字"></el-input-number>
         </el-form-item>
+        <el-form-item label="宝箱价格" :label-width="formLabelWidth">
+          <el-input-number v-model="form.boxPrice" :precision="2" :min="0" :max="999999" label="宝箱价格（默认使用饰品价格）"></el-input-number>
+        </el-form-item>
         <!-- <el-form-item label="幸运物品数量" :label-width="formLabelWidth">
           <el-input-number v-model="form.luckOdds" :min="0" :max="10000" label="描述文字"></el-input-number>
         </el-form-item>-->
@@ -314,7 +339,8 @@ export default {
         luckOdds: 0,
         odds: 0,
         ornamentId: null,
-        realOdds: 0
+        realOdds: 0,
+        boxPrice: null
       },
       dialogFormVisible: false,
       dialogFormVisibles: false,
@@ -425,7 +451,8 @@ export default {
           luckOdds: 0,
           odds: 0,
           ornamentId: null,
-          realOdds: 0
+          realOdds: 0,
+          boxPrice: null
         };
 
         this.getlist();
@@ -447,7 +474,8 @@ export default {
           luckOdds: 0,
           odds: 0,
           ornamentId: null,
-          realOdds: 0
+          realOdds: 0,
+          boxPrice: null
         };
       });
     },
@@ -455,6 +483,8 @@ export default {
       this.form.ornamentId = res.id;
       this.orOnselect = res;
       this.orOnselects.itemName = res.name + "   -   ￥" + res.usePrice;
+      // 默认使用饰品价格
+      this.form.boxPrice = res.usePrice;
       this.orform.itemName = null;
       this.orList = null;
       this.$refs.morePop.doClose();
