@@ -254,6 +254,25 @@
       </el-table-column>
       <el-table-column label="必中价值高的饰品开箱次数" align="center" prop="mustHighValueOpenNum" width="140">
       </el-table-column>
+      <el-table-column label="目标利润率" align="center" prop="targetProfitMargin" width="100">
+        <template slot-scope="scope">
+          <span v-if="scope.row.targetProfitMargin != null">{{ scope.row.targetProfitMargin }}%</span>
+          <span v-else style="color: #909399;">-</span>
+        </template>
+      </el-table-column>
+      <el-table-column label="启用利润率控制" align="center" prop="profitControlEnabled" width="120">
+        <template slot-scope="scope">
+          <el-tag v-if="scope.row.profitControlEnabled === 1" type="success" size="small">启用</el-tag>
+          <el-tag v-else-if="scope.row.profitControlEnabled === 0" type="info" size="small">禁用</el-tag>
+          <span v-else style="color: #909399;">-</span>
+        </template>
+      </el-table-column>
+      <el-table-column label="统计窗口大小" align="center" prop="profitWindowSize" width="120">
+        <template slot-scope="scope">
+          <span v-if="scope.row.profitWindowSize != null && scope.row.profitWindowSize > 0">{{ scope.row.profitWindowSize }}次</span>
+          <span v-else style="color: #909399;">全部历史</span>
+        </template>
+      </el-table-column>
       <el-table-column
         align="center"
         class-name="small-padding fixed-width"
@@ -350,6 +369,39 @@
         </el-form-item>
         <el-form-item label="必中价值高的饰品开箱次数" prop="mustHighValueOpenNum">
           <el-input v-model="form.mustHighValueOpenNum" placeholder="请输入必中价值高的饰品开箱次数" style="width: 220px" />
+        </el-form-item>
+        <el-form-item label="目标利润率" prop="targetProfitMargin">
+          <el-input-number 
+            v-model="form.targetProfitMargin" 
+            :precision="2" 
+            :step="0.1" 
+            :min="0" 
+            :max="100"
+            placeholder="请输入目标利润率（百分比）" 
+            style="width: 220px"
+          ></el-input-number>
+          <span style="margin-left: 10px; color: #909399;">%</span>
+        </el-form-item>
+        <el-form-item label="启用利润率控制" prop="profitControlEnabled">
+          <el-switch
+            v-model="form.profitControlEnabled"
+            :active-value="1"
+            :inactive-value="0"
+            active-color="#13CE66"
+            inactive-color="#FF4949"
+            active-text="启用"
+            inactive-text="禁用"
+          ></el-switch>
+        </el-form-item>
+        <el-form-item label="统计窗口大小" prop="profitWindowSize">
+          <el-input-number 
+            v-model="form.profitWindowSize" 
+            :min="0" 
+            :max="100000"
+            placeholder="留空表示使用所有历史数据" 
+            style="width: 220px"
+          ></el-input-number>
+          <span style="margin-left: 10px; color: #909399;">次（留空=使用所有历史数据）</span>
         </el-form-item>
       </el-form>
       <div slot="footer" class="dialog-footer">
@@ -1112,7 +1164,10 @@ export default {
         updateBy: null,
         updateTime: null,
         remark: null,
-        delFlag: null
+        delFlag: null,
+        targetProfitMargin: 30.00,
+        profitControlEnabled: 1,
+        profitWindowSize: null
       };
       this.resetForm("form");
     },
@@ -1156,7 +1211,10 @@ export default {
       this.open = true;
       (this.form.isHome = "0"),
         (this.form.status = "0"),
-        (this.form.isFight = "0");
+        (this.form.isFight = "0"),
+        (this.form.targetProfitMargin = 30.00),
+        (this.form.profitControlEnabled = 1),
+        (this.form.profitWindowSize = null);
       this.title = "添加宝箱数据";
     },
     /** 修改按钮操作 */
