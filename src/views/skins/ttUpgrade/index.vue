@@ -52,7 +52,39 @@
           <image-preview :src="scope.row.imageUrl" :width="50" :height="50" />
         </template>
       </el-table-column>
-      <el-table-column label="价格" align="center" prop="usePrice" />
+      <el-table-column label="价格" align="center">
+        <template slot-scope="scope">
+          <el-popover placement="top" popper-class="layout">
+            <div style="text-align: center;">
+              <el-row>
+                <el-col :span="18">
+                  <el-input-number
+                    v-model="editPrice"
+                    :precision="2"
+                    :min="0"
+                    :step="0.01"
+                    placeholder="请输入价格"
+                    style="width: 100%"
+                  ></el-input-number>
+                </el-col>
+                <el-col :span="6">
+                  <div style="text-align: right; margin: 0;line-height:36px">
+                    <el-button size="mini" type="text" @click="handleR">取消</el-button>
+                    <el-button type="text" size="mini" @click="handleChangePrice(scope.row)">确定</el-button>
+                  </div>
+                </el-col>
+              </el-row>
+            </div>
+            <el-button
+              slot="reference"
+              type="text"
+              class="under"
+              icon="el-icon-edit"
+              @click="handleChangePriceClick(scope.row.ornamentPrice || scope.row.usePrice)"
+            >{{ scope.row.ornamentPrice || scope.row.usePrice }}</el-button>
+          </el-popover>
+        </template>
+      </el-table-column>
       <el-table-column label="级别" align="center" prop="level">
         <template slot-scope="scope">
           <el-popover placement="top" popper-class="layout">
@@ -386,6 +418,7 @@ export default {
         maxluckSection: null,
         minluckSection: null
       },
+      editPrice: null, // 用于编辑价格
       levelList: [],
 
       ortotal: 1,
@@ -534,6 +567,33 @@ export default {
           .split(",")[1]
           .slice(0, -1);
       }
+    },
+    handleChangePriceClick(price) {
+      this.editPrice = price;
+    },
+    handleChangePrice(row) {
+      if (this.editPrice === null || this.editPrice < 0) {
+        this.$message({
+          type: "warning",
+          message: "请输入有效的价格!"
+        });
+        return;
+      }
+      let data = { ...row };
+      data.ornamentPrice = this.editPrice;
+      updateUpgradeOrnaments(data)
+        .then(res => {
+          this.$message({
+            type: "success",
+            message: "修改成功!"
+          });
+          document.body.click();
+          this.editPrice = null;
+          this.getList();
+        })
+        .catch(res => {
+          this.getList();
+        });
     },
     handleChangeInterval(res, type) {
       if (type == "p") {

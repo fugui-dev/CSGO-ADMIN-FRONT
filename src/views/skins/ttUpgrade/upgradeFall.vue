@@ -15,7 +15,38 @@
         </template>
       </el-table-column>
       <el-table-column label="名称" align="center" prop="itemName" />
-      <el-table-column label="价格" align="center" prop="usePrice" />
+      <el-table-column label="价格" align="center" prop="usePrice">
+        <template slot-scope="scope">
+          <el-popover placement="top" popper-class="layout">
+            <div style="text-align: center;">
+              <el-row>
+                <el-col :span="18">
+                  <el-input-number
+                    v-model="editPrice"
+                    :precision="2"
+                    :min="0"
+                    :step="0.01"
+                    placeholder="请输入价格"
+                    style="width: 100%"
+                  ></el-input-number>
+                </el-col>
+                <el-col :span="6">
+                  <div style="text-align: right; margin: 0;line-height:36px">
+                    <el-button size="mini" type="text" @click="handleR">取消</el-button>
+                    <el-button type="text" size="mini" @click="handleChangePrice(scope.row)">确定</el-button>
+                  </div>
+                </el-col>
+              </el-row>
+            </div>
+            <el-button
+              slot="reference"
+              type="text"
+              class="under"
+              @click="handleChangePriceClick(scope.row.ornamentPrice || scope.row.usePrice)"
+            >{{ (scope.row.ornamentPrice || scope.row.usePrice) | moneyFormat }}</el-button>
+          </el-popover>
+        </template>
+      </el-table-column>
       <el-table-column label="级别" align="center" prop="level">
         <template slot-scope="scope">
           <el-popover placement="top" popper-class="layout">
@@ -245,6 +276,7 @@ export default {
   ],
   data() {
     return {
+      editPrice: 0,
       orform: {
         itemName: null,
         pageNum: 1,
@@ -309,6 +341,28 @@ export default {
     handleR() {
       document.body.click();
       this.getList();
+    },
+    handleChangePriceClick(price) {
+      this.editPrice = price;
+    },
+    handleChangePrice(row) {
+      const data = {
+        id: row.id,
+        ornamentPrice: this.editPrice
+      };
+      upFail(data)
+        .then(() => {
+          this.$message({
+            type: "success",
+            message: "价格修改成功!"
+          });
+          document.body.click();
+          this.getList();
+          this.editPrice = 0;
+        })
+        .catch(() => {
+          this.getList();
+        });
     },
     handleChangeType(res) {
       let data = res;
