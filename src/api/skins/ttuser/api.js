@@ -139,3 +139,11 @@ export function getUserProfitStatistics(userId) {
     method: 'get',
   })
 }
+//转增记录-获取转增记录列表
+export function getTransferRecordList(query) {
+  return request({
+    url: '/admin/ornamentTransferRecord/list',
+    method: 'get',
+    params: query
+  })
+}
