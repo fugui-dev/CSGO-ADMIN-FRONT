@@ -249,6 +249,14 @@
       <el-table-column align="center" label="箱内饰品总价值" prop="aggregateAmount" />
       <el-table-column align="center" label="每轮利润" prop="profit" />
       <el-table-column align="center" label="每轮利润率" prop="profitMargin" />
+      <el-table-column label="实际利润率" align="center" prop="actualProfitMargin" width="120">
+        <template slot-scope="scope">
+          <span v-if="scope.row.actualProfitMargin != null" :style="{ color: scope.row.actualProfitMargin >= 0 ? '#67C23A' : '#F56C6C' }">
+            {{ scope.row.actualProfitMargin }}%
+          </span>
+          <span v-else style="color: #909399;">-</span>
+        </template>
+      </el-table-column>
       <el-table-column label="宝箱开启次数" align="center" prop="openNum" width="100" />
       <el-table-column label="添加价值高的饰品开箱次数" align="center" prop="highValueOpenNum" width="140">
       </el-table-column>
