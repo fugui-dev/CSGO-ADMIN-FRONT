@@ -36,7 +36,7 @@ module.exports = {
       // detail: https://cli.vuejs.org/config/#devserver-proxy
       [process.env.VUE_APP_BASE_API]: {
         // target: `http://localhost:8080`,
-        target: `http://121.229.204.223:8089/prod-api`,
+        target: `http://8.136.42.105:8089/prod-api`,
         // target: `https://api.wywl.online/prod-api`,
         // target: `https://api.f99skins.com/prod-api`,
         changeOrigin: true,
