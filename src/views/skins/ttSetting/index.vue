@@ -83,7 +83,7 @@
 
                     <el-form-item label="实名福利金币">
                       <el-input-number
-                        v-model="form.registerRedPacket"
+                        v-model="form.realNameGiftMoney"
                         :precision="2"
                         :step="0.1"
                         :max="1000"
@@ -94,13 +94,24 @@
                     </el-form-item>
                     <el-form-item label="实名福利弹药">
                       <el-input-number
-                        v-model="form.registerRedPacket"
+                        v-model="form.realNameGiftCredits"
                         :precision="2"
                         :step="0.1"
                         :max="1000"
                       ></el-input-number>
                       <div style="color: #737373;">
                         <i class="el-icon-info">新用户实名红包奖励弹药</i>
+                      </div>
+                    </el-form-item>
+                    <el-form-item label="实名福利饰品ID">
+                      <el-input-number
+                        v-model="form.realNameGiftOrnamentId"
+                        :precision="0"
+                        :step="1"
+                        :min="0"
+                      ></el-input-number>
+                      <div style="color: #737373;">
+                        <i class="el-icon-info">新用户实名红包奖励饰品ID</i>
                       </div>
                     </el-form-item>
                   </el-form>
