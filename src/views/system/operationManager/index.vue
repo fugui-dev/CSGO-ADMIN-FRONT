@@ -135,6 +135,13 @@
           <el-button
             size="mini"
             type="text"
+            icon="el-icon-link"
+            @click="handleBindAnchor(scope.row)"
+            v-hasPermi="['admin:operationManager:edit']"
+          >绑定主播</el-button>
+          <el-button
+            size="mini"
+            type="text"
             icon="el-icon-delete"
             @click="handleDelete(scope.row)"
             v-hasPermi="['admin:operationManager:remove']"
@@ -181,7 +188,22 @@
         <el-row>
           <el-col :span="12">
             <el-form-item label="头像" prop="avatar">
-              <el-input v-model="form.avatar" placeholder="请输入头像URL" maxlength="500" />
+              <el-select v-model="form.avatar" placeholder="请选择头像" filterable style="width: 100%">
+                <el-option
+                  v-for="item in avatarList"
+                  :key="item.id"
+                  :label="item.avatar"
+                  :value="item.avatar"
+                >
+                  <div style="display: flex; align-items: center;">
+                    <el-avatar :src="item.avatar" :size="30" style="margin-right: 10px;"></el-avatar>
+                    <span>{{ item.avatar }}</span>
+                  </div>
+                </el-option>
+              </el-select>
+              <div v-if="form.avatar" style="margin-top: 10px;">
+                <el-avatar :src="form.avatar" :size="50"></el-avatar>
+              </div>
             </el-form-item>
           </el-col>
           <el-col :span="12">
@@ -206,11 +228,71 @@
         <el-button @click="cancel">取 消</el-button>
       </div>
     </el-dialog>
+
+    <!-- 绑定主播对话框 -->
+    <el-dialog title="绑定主播" :visible.sync="bindAnchorOpen" width="800px" append-to-body>
+      <div style="margin-bottom: 20px;">
+        <el-select
+          v-model="selectedAnchorIds"
+          multiple
+          filterable
+          placeholder="请选择要绑定的主播"
+          style="width: 100%"
+        >
+          <el-option
+            v-for="anchor in anchorList"
+            :key="anchor.userId"
+            :label="anchor.nickName + ' (' + anchor.userName + ')'"
+            :value="anchor.userId"
+          >
+            <div style="display: flex; align-items: center;">
+              <el-avatar :src="anchor.avatar" :size="30" style="margin-right: 10px;"></el-avatar>
+              <span>{{ anchor.nickName }} ({{ anchor.userName }})</span>
+            </div>
+          </el-option>
+        </el-select>
+      </div>
+      
+      <div style="margin-bottom: 20px;">
+        <h4>已绑定的主播：</h4>
+        <el-table :data="bindAnchorList" style="width: 100%">
+          <el-table-column label="头像" width="80">
+            <template slot-scope="scope">
+              <el-avatar :src="getAnchorAvatar(scope.row.anchorId)" :size="40"></el-avatar>
+            </template>
+          </el-table-column>
+          <el-table-column label="主播昵称" prop="anchorNickName"></el-table-column>
+          <el-table-column label="主播账号" prop="anchorUserName"></el-table-column>
+          <el-table-column label="绑定时间" prop="bindTime" width="180">
+            <template slot-scope="scope">
+              <span>{{ parseTime(scope.row.bindTime) }}</span>
+            </template>
+          </el-table-column>
+          <el-table-column label="操作" width="100">
+            <template slot-scope="scope">
+              <el-button
+                size="mini"
+                type="text"
+                icon="el-icon-delete"
+                @click="handleUnbindAnchor(scope.row)"
+              >解绑</el-button>
+            </template>
+          </el-table-column>
+        </el-table>
+      </div>
+      
+      <div slot="footer" class="dialog-footer">
+        <el-button type="primary" @click="submitBindAnchor">确 定</el-button>
+        <el-button @click="bindAnchorOpen = false">取 消</el-button>
+      </div>
+    </el-dialog>
   </div>
 </template>
 
 <script>
-import { listOperationManager, getOperationManager, delOperationManager, addOperationManager, updateOperationManager, exportOperationManager } from "@/api/system/operationManager";
+import { listOperationManager, getOperationManager, delOperationManager, addOperationManager, updateOperationManager, exportOperationManager, bindAnchors, unbindAnchor, getBindAnchors } from "@/api/system/operationManager";
+import { getuserAvatar } from "@/api/skins/ttSetting/api";
+import { listUser } from "@/api/skins/ttuser/api";
 
 export default {
   name: "OperationManager",
@@ -230,6 +312,14 @@ export default {
       total: 0,
       // 运营管理表格数据
       operationManagerList: [],
+      // 头像列表
+      avatarList: [],
+      // 绑定主播相关
+      bindAnchorOpen: false,
+      currentOperationManagerId: null,
+      anchorList: [],
+      selectedAnchorIds: [],
+      bindAnchorList: [],
       // 弹出层标题
       title: "",
       // 是否显示弹出层
@@ -262,6 +352,8 @@ export default {
   },
   created() {
     this.getList();
+    this.getAvatarList();
+    this.getAnchorList();
   },
   methods: {
     // 密码验证器
@@ -281,6 +373,67 @@ export default {
         this.operationManagerList = response.rows;
         this.total = response.total;
         this.loading = false;
+      });
+    },
+    /** 查询头像列表 */
+    getAvatarList() {
+      getuserAvatar({ pageNum: 1, pageSize: 1000, status: '0' }).then(response => {
+        this.avatarList = response.rows || [];
+      });
+    },
+    /** 查询主播列表 */
+    getAnchorList() {
+      listUser({ userType: '01', pageNum: 1, pageSize: 1000 }).then(response => {
+        this.anchorList = response.rows || [];
+      });
+    },
+    /** 绑定主播按钮操作 */
+    handleBindAnchor(row) {
+      this.currentOperationManagerId = row.id;
+      this.selectedAnchorIds = [];
+      this.bindAnchorOpen = true;
+      this.getBindAnchorList();
+    },
+    /** 查询已绑定的主播列表 */
+    getBindAnchorList() {
+      if (!this.currentOperationManagerId) return;
+      getBindAnchors(this.currentOperationManagerId).then(response => {
+        this.bindAnchorList = response.data || [];
+        // 填充主播信息
+        this.bindAnchorList.forEach(item => {
+          const anchor = this.anchorList.find(a => a.userId === item.anchorId);
+          if (anchor) {
+            item.anchorNickName = anchor.nickName;
+            item.anchorUserName = anchor.userName;
+            item.anchorAvatar = anchor.avatar;
+          }
+        });
+      });
+    },
+    /** 获取主播头像 */
+    getAnchorAvatar(anchorId) {
+      const anchor = this.anchorList.find(a => a.userId === anchorId);
+      return anchor ? anchor.avatar : '';
+    },
+    /** 提交绑定主播 */
+    submitBindAnchor() {
+      if (!this.selectedAnchorIds || this.selectedAnchorIds.length === 0) {
+        this.$modal.msgWarning("请至少选择一个主播");
+        return;
+      }
+      bindAnchors(this.currentOperationManagerId, this.selectedAnchorIds).then(response => {
+        this.$modal.msgSuccess("绑定成功");
+        this.getBindAnchorList();
+        this.selectedAnchorIds = [];
+      });
+    },
+    /** 解绑主播 */
+    handleUnbindAnchor(row) {
+      this.$modal.confirm('确认要解绑该主播吗？').then(() => {
+        unbindAnchor(row.id).then(response => {
+          this.$modal.msgSuccess("解绑成功");
+          this.getBindAnchorList();
+        });
       });
     },
     // 取消按钮

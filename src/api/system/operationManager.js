@@ -53,3 +53,28 @@ export function exportOperationManager(query) {
   })
 }
 
+// 绑定主播
+export function bindAnchors(operationManagerId, anchorIds) {
+  return request({
+    url: '/admin/operationManager/' + operationManagerId + '/bindAnchors',
+    method: 'post',
+    data: anchorIds
+  })
+}
+
+// 解绑主播
+export function unbindAnchor(id) {
+  return request({
+    url: '/admin/operationManager/anchor/' + id + '/unbind',
+    method: 'put'
+  })
+}
+
+// 查询运营管理绑定的主播列表
+export function getBindAnchors(operationManagerId) {
+  return request({
+    url: '/admin/operationManager/' + operationManagerId + '/anchors',
+    method: 'get'
+  })
+}
+
