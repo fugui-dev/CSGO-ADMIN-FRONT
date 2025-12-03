@@ -28,17 +28,6 @@
           @keyup.enter.native="handleQuery"
         />
       </el-form-item>
-      <el-form-item label="状态" prop="status">
-        <el-select
-          v-model="queryParams.status"
-          placeholder="状态"
-          clearable
-          style="width: 240px"
-        >
-          <el-option label="正常" value="0" />
-          <el-option label="停用" value="1" />
-        </el-select>
-      </el-form-item>
       <el-form-item>
         <el-button type="primary" icon="el-icon-search" size="mini" @click="handleQuery">搜索</el-button>
         <el-button icon="el-icon-refresh" size="mini" @click="resetQuery">重置</el-button>
@@ -103,16 +92,6 @@
       <el-table-column label="名称" align="center" prop="name" :show-overflow-tooltip="true" />
       <el-table-column label="团队名称" align="center" prop="teamName" :show-overflow-tooltip="true" />
       <el-table-column label="登录账号" align="center" prop="loginAccount" :show-overflow-tooltip="true" />
-      <el-table-column label="状态" align="center" prop="status" width="100">
-        <template slot-scope="scope">
-          <el-switch
-            v-model="scope.row.status"
-            active-value="0"
-            inactive-value="1"
-            @change="handleStatusChange(scope.row)"
-          ></el-switch>
-        </template>
-      </el-table-column>
       <el-table-column label="创建时间" align="center" prop="createTime" width="160">
         <template slot-scope="scope">
           <span>{{ parseTime(scope.row.createTime) }}</span>
@@ -204,14 +183,6 @@
               <div v-if="form.avatar" style="margin-top: 10px;">
                 <el-avatar :src="form.avatar" :size="50"></el-avatar>
               </div>
-            </el-form-item>
-          </el-col>
-          <el-col :span="12">
-            <el-form-item label="状态">
-              <el-radio-group v-model="form.status">
-                <el-radio :label="0">正常</el-radio>
-                <el-radio :label="1">停用</el-radio>
-              </el-radio-group>
             </el-form-item>
           </el-col>
         </el-row>
@@ -330,8 +301,7 @@ export default {
         pageSize: 10,
         name: undefined,
         loginAccount: undefined,
-        teamName: undefined,
-        status: undefined
+        teamName: undefined
       },
       // 表单参数
       form: {},
@@ -450,7 +420,6 @@ export default {
         teamName: undefined,
         loginAccount: undefined,
         password: undefined,
-        status: 0,
         remark: undefined
       };
       this.resetForm("form");
