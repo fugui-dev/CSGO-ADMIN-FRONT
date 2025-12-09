@@ -53,3 +53,37 @@ export function getTeamListApi(data) {
     data: data
   })
 }
+
+// 获取夺冠胜利宝箱配置列表
+export function getMatchRewardBoxConfigListApi() {
+  return request({
+    url: '/admin/match/reward/box/config/list',
+    method: 'get'
+  })
+}
+
+// 创建夺冠胜利宝箱配置
+export function createMatchRewardBoxConfigApi(data) {
+  return request({
+    url: '/admin/match/reward/box/config/create',
+    method: 'post',
+    data: data
+  })
+}
+
+// 更新夺冠胜利宝箱配置
+export function updateMatchRewardBoxConfigApi(data) {
+  return request({
+    url: '/admin/match/reward/box/config/update',
+    method: 'put',
+    data: data
+  })
+}
+
+// 删除夺冠胜利宝箱配置
+export function deleteMatchRewardBoxConfigApi(id) {
+  return request({
+    url: '/admin/match/reward/box/config/' + id,
+    method: 'delete'
+  })
+}

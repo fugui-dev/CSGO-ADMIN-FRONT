@@ -27,8 +27,9 @@
       </el-form-item>
       <el-form-item label="日期">
         <el-date-picker
-          v-model="queryParams.startTime"
-          format="yyyy 年 MM 月 dd 日"
+          v-model="dateRange"
+          format="yyyy-MM-dd"
+          value-format="yyyy-MM-dd"
           type="daterange"
           range-separator="至"
           start-placeholder="开始日期"
@@ -167,12 +168,15 @@ export default {
       total: 1,
       showSearch: true,
       tableData: [],
+      dateRange: null,
       queryParams: {
         outTradeNo: null,
         pageNum: 1,
         pageSize: 10,
         phoneNumber: null,
-        userName: null
+        userName: null,
+        startTime: null,
+        endTime: null
       }
     };
   },
@@ -189,12 +193,15 @@ export default {
       });
     },
     resetQuery() {
+      this.dateRange = null;
       this.queryParams = {
         outTradeNo: null,
         pageNum: 1,
         pageSize: 10,
         phoneNumber: null,
-        userName: null
+        userName: null,
+        startTime: null,
+        endTime: null
       };
       this.getList();
     },
@@ -203,7 +210,16 @@ export default {
     },
     getList() {
       this.loading = true;
-      getDeliveryRecordList(this.queryParams).then(res => {
+      // 处理日期范围
+      const params = { ...this.queryParams };
+      if (this.dateRange && Array.isArray(this.dateRange) && this.dateRange.length === 2) {
+        params.startTime = this.dateRange[0] + ' 00:00:00';
+        params.endTime = this.dateRange[1] + ' 23:59:59';
+      } else {
+        params.startTime = null;
+        params.endTime = null;
+      }
+      getDeliveryRecordList(params).then(res => {
         this.tableData = res.rows;
         this.total = res.total;
         this.loading = false;
