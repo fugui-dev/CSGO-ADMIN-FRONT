@@ -219,38 +219,38 @@ export default {
       } else {
         // 如果没有价格，弹出对话框让用户输入价格
         this.$prompt('请输入购买价格', '购买发货', {
-          confirmButtonText: '确定',
-          cancelButtonText: '取消',
-          inputPattern: /^(\d+\.?\d*)?$/,
-          inputErrorMessage: '请输入有效的价格',
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        inputPattern: /^(\d+\.?\d*)?$/,
+        inputErrorMessage: '请输入有效的价格',
           inputPlaceholder: '请输入购买价格'
-        }).then(({ value }) => {
-          let aa = {
-            productId: res.id,
-            deliveryRecordId: this.t_id,
-            partyType: parseInt(this.partyType)
-          };
-          // 如果输入了价格，添加到参数中
-          if (value && value.trim() !== '') {
-            aa.purchasePrice = parseFloat(value);
-          }
-          
+      }).then(({ value }) => {
+        let aa = {
+          productId: res.id,
+          deliveryRecordId: this.t_id,
+          partyType: parseInt(this.partyType)
+        };
+        // 如果输入了价格，添加到参数中
+        if (value && value.trim() !== '') {
+          aa.purchasePrice = parseFloat(value);
+        }
+        
           // 直接调用接口
-          tradeBuy(aa).then(res => {
-            this.getList();
-            this.$message({
-              type: "success",
-              message: "购买发货成功!"
-            });
-          }).catch(err => {
-            this.$message({
-              type: "error",
-              message: err.msg || "购买发货失败!"
+            tradeBuy(aa).then(res => {
+              this.getList();
+              this.$message({
+                type: "success",
+                message: "购买发货成功!"
+              });
+            }).catch(err => {
+              this.$message({
+                type: "error",
+                message: err.msg || "购买发货失败!"
             });
           });
-        }).catch(() => {
-          // 用户取消输入
-        });
+      }).catch(() => {
+        // 用户取消输入
+      });
       }
     },
     scrollEventFn(e) {
