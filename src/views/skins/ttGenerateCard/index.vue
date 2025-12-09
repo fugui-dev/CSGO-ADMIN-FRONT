@@ -75,6 +75,17 @@
       </el-col>
       <el-col :span="1.5">
         <el-button
+          type="danger"
+          plain
+          icon="el-icon-delete"
+          size="mini"
+          :disabled="multiple"
+          @click="handleDelete"
+          v-hasPermi="['admin:ornamentsLevel:remove']"
+        >删除</el-button>
+      </el-col>
+      <el-col :span="1.5">
+        <el-button
           v-hasPermi="['admin:ornamentsLevel:edit']"
           plain
           icon="el-icon-download"
@@ -110,6 +121,17 @@
       <el-table-column align="center" label="创建者" prop="createBy" />
       <el-table-column align="center" label="更新时间" prop="updateTime" />
       <el-table-column align="center" label="更新者" prop="updateBy" />
+      <el-table-column label="操作" align="center" width="160" class-name="small-padding fixed-width">
+        <template slot-scope="scope">
+          <el-button
+            size="mini"
+            type="text"
+            icon="el-icon-delete"
+            @click="handleDelete(scope.row)"
+            v-hasPermi="['admin:ornamentsLevel:remove']"
+          >删除</el-button>
+        </template>
+      </el-table-column>
     </el-table>
 
     <pagination
@@ -158,7 +180,8 @@
 <script>
 import {
   getRechargeCard,
-  addRechargeCard
+  addRechargeCard,
+  delRechargeCard
 } from "@/api/skins/ttGenerateCard/api";
 import { getRechargeList } from "@/api/skins/ttRecharge/api";
 import { listUser } from "@/api/skins/ttuser/api";
@@ -470,6 +493,22 @@ export default {
       this.reset();
       this.open = true;
       this.title = "生成卡密";
+    },
+    // 多选框选中数据
+    handleSelectionChange(selection) {
+      this.ids = selection.map(item => item.id);
+      this.single = selection.length !== 1;
+      this.multiple = !selection.length;
+    },
+    /** 删除按钮操作 */
+    handleDelete(row) {
+      const ids = row.id || this.ids;
+      this.$modal.confirm('是否确认删除卡密编号为"' + ids + '"的数据项？').then(() => {
+        return delRechargeCard(ids);
+      }).then(() => {
+        this.getList();
+        this.$modal.msgSuccess("删除成功");
+      }).catch(() => {});
     }
   }
 };

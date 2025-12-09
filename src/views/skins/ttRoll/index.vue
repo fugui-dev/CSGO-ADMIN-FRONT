@@ -105,11 +105,25 @@
           </div>
         </template>
       </el-table-column>
-      <el-table-column align="center" prop="sortBy" label="置顶"></el-table-column>
+      <el-table-column align="center" prop="sortBy" label="排序值" width="100"></el-table-column>
       <el-table-column align="center" prop="createBy" label="创建用户" width="103"></el-table-column>
       <el-table-column align="center" prop="createTime" label="创建时间" width="188"></el-table-column>
-      <el-table-column align="center" prop="address" label="操作">
+      <el-table-column align="center" prop="address" label="操作" width="400">
         <template slot-scope="scope">
+          <el-button
+            type="text"
+            size="mini"
+            icon="el-icon-top"
+            @click="handleMoveUp(scope.row)"
+            :disabled="scope.$index === 0"
+          >上移</el-button>
+          <el-button
+            type="text"
+            size="mini"
+            icon="el-icon-bottom"
+            @click="handleMoveDown(scope.row, scope.$index)"
+            :disabled="scope.$index === tableData.length - 1"
+          >下移</el-button>
           <el-button
             type="text"
             size="mini"
@@ -297,7 +311,8 @@ import {
   roll,
   delRoll,
   rollChange,
-  endRoll
+  endRoll,
+  updateRollSort
 } from "@/api/skins/ttRoll/api";
 import { listUser } from "@/api/skins/ttuser/api";
 
@@ -537,6 +552,81 @@ export default {
         this.loading = false;
         this.total = res.total;
       });
+    },
+    /** 上移 */
+    handleMoveUp(row) {
+      const currentIndex = this.tableData.findIndex(item => item.id === row.id);
+      if (currentIndex > 0) {
+        const prevRow = this.tableData[currentIndex - 1];
+        const currentSortBy = row.sortBy != null ? row.sortBy : 0;
+        const prevSortBy = prevRow.sortBy != null ? prevRow.sortBy : 0;
+        
+        // 如果两个值相同，使用时间戳确保有差异
+        let newCurrentSortBy = prevSortBy;
+        let newPrevSortBy = currentSortBy;
+        
+        if (newCurrentSortBy === newPrevSortBy) {
+          // 如果值相同，给上移的项一个更大的值
+          newCurrentSortBy = prevSortBy + 1;
+          newPrevSortBy = currentSortBy;
+        }
+        
+        // 更新当前行
+        updateRollSort({
+          id: row.id,
+          sortBy: newCurrentSortBy
+        }).then(() => {
+          // 更新上一行
+          return updateRollSort({
+            id: prevRow.id,
+            sortBy: newPrevSortBy
+          });
+        }).then(() => {
+          this.$modal.msgSuccess("排序更新成功");
+          this.getList();
+        }).catch(() => {
+          this.$modal.msgError("排序更新失败");
+        });
+      }
+    },
+    /** 下移 */
+    handleMoveDown(row, index) {
+      if (index < this.tableData.length - 1) {
+        const nextRow = this.tableData[index + 1];
+        const currentSortBy = row.sortBy != null ? row.sortBy : 0;
+        const nextSortBy = nextRow.sortBy != null ? nextRow.sortBy : 0;
+        
+        // 交换排序值
+        let newCurrentSortBy = nextSortBy;
+        let newNextSortBy = currentSortBy;
+        
+        if (newCurrentSortBy === newNextSortBy) {
+          // 如果值相同，给下移的项一个更小的值
+          newCurrentSortBy = nextSortBy;
+          newNextSortBy = currentSortBy - 1;
+          if (newNextSortBy < 0) {
+            newNextSortBy = 0;
+            newCurrentSortBy = 1;
+          }
+        }
+        
+        // 更新当前行
+        updateRollSort({
+          id: row.id,
+          sortBy: newCurrentSortBy
+        }).then(() => {
+          // 更新下一行
+          return updateRollSort({
+            id: nextRow.id,
+            sortBy: newNextSortBy
+          });
+        }).then(() => {
+          this.$modal.msgSuccess("排序更新成功");
+          this.getList();
+        }).catch(() => {
+          this.$modal.msgError("排序更新失败");
+        });
+      }
     }
   }
 };

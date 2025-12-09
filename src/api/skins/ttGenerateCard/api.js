@@ -37,3 +37,10 @@ export function createGenerateCard(data) {
     data: data
   })
 }
+
+export function delRechargeCard(ids) {
+  return request({
+    url: '/admin/rechargeCard/' + ids,
+    method: 'delete'
+  })
+}

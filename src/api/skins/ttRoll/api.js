@@ -101,6 +101,14 @@ export function endRoll(rollId) {
     method: "get",
   });
 }
+// 更新ROLL房排序
+export function updateRollSort(data) {
+  return request({
+    url: "/admin/roll/updateSort",
+    method: "put",
+    data: data,
+  });
+}
 
 export function rollJackpotOrnamentDel(jackpotId, rollJackpotOrnamentsIds) {
   return request({
