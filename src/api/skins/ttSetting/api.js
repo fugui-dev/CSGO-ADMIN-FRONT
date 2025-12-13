@@ -260,3 +260,89 @@ export function getOperationalStatistics() {
     method: 'get',
   })
 }
+
+// VIP设置管理
+// 获取VIP设置列表
+export function getVipConfig(query) {
+  return request({
+    url: '/admin/vipConfig/list',
+    method: 'get',
+    params: query
+  })
+}
+
+// 获取所有VIP设置（不分页）
+export function getAllVipConfig() {
+  return request({
+    url: '/admin/vipConfig/all',
+    method: 'get',
+  })
+}
+
+// 获取VIP设置详细信息
+export function getVipConfigId(id) {
+  return request({
+    url: `/admin/vipConfig/${id}`,
+    method: 'get',
+  })
+}
+
+// 新增VIP设置
+export function addVipConfig(data) {
+  return request({
+    url: '/admin/vipConfig',
+    method: 'post',
+    data: data
+  })
+}
+
+// 修改VIP设置
+export function changeVipConfig(data) {
+  return request({
+    url: '/admin/vipConfig',
+    method: 'put',
+    data: data
+  })
+}
+
+// 删除VIP设置
+export function delVipConfig(ids) {
+  return request({
+    url: `/admin/vipConfig/${ids}`,
+    method: 'delete',
+  })
+}
+
+// 用户VIP每日记录管理
+// 获取用户VIP每日记录列表
+export function getUserVipDailyRecord(query) {
+  return request({
+    url: '/admin/userVipDailyRecord/list',
+    method: 'get',
+    params: query
+  })
+}
+
+// 获取用户VIP每日记录详细信息
+export function getUserVipDailyRecordId(id) {
+  return request({
+    url: `/admin/userVipDailyRecord/${id}`,
+    method: 'get',
+  })
+}
+
+// 手动发放返点
+export function distributeRebate(id) {
+  return request({
+    url: `/admin/userVipDailyRecord/distribute/${id}`,
+    method: 'post',
+  })
+}
+
+// 重新计算返点
+export function recalculateRebate(id) {
+  return request({
+    url: `/admin/userVipDailyRecord/recalculate/${id}`,
+    method: 'post',
+  })
+}
