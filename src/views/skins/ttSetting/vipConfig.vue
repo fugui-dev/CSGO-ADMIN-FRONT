@@ -5,7 +5,7 @@
       <el-table-column align="center" prop="id" label="ID" width="80"></el-table-column>
       <el-table-column align="center" prop="level" label="VIP等级" width="100"></el-table-column>
       <el-table-column align="center" prop="name" label="VIP等级名称" width="150"></el-table-column>
-      <el-table-column align="center" prop="growthValue" label="成长值（消费金额）" width="150">
+      <el-table-column align="center" prop="growthValue" label="成长值（充值金额）" width="150">
         <template slot-scope="scope">
           {{ scope.row.growthValue }} 元
         </template>
@@ -42,7 +42,7 @@
         <el-form-item label="VIP等级名称" prop="name">
           <el-input v-model="form.name" placeholder="例如：VIP1"></el-input>
         </el-form-item>
-        <el-form-item label="成长值（消费金额）" prop="growthValue">
+        <el-form-item label="成长值（充值金额）" prop="growthValue">
           <el-input-number
             v-model="form.growthValue"
             controls-position="right"
@@ -52,7 +52,7 @@
             style="width: 100%"
           ></el-input-number>
           <div style="color: #909399; font-size: 12px; margin-top: 5px;">
-            达到此消费金额即可获得该VIP等级
+            达到此充值金额即可获得该VIP等级
           </div>
         </el-form-item>
         <el-form-item label="消费返点比例（%）" prop="rebateRate">

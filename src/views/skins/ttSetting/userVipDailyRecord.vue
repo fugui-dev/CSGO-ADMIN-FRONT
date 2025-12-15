@@ -35,14 +35,29 @@
           <span v-else>-</span>
         </template>
       </el-table-column>
-      <el-table-column align="center" prop="dailyConsumeAmount" label="每日消费金额" width="130">
+      <el-table-column align="center" prop="consumeSource" label="消费来源" width="120">
         <template slot-scope="scope">
-          <span style="color: #f56c6c; font-weight: bold;">{{ scope.row.dailyConsumeAmount }} 元</span>
+          {{ scope.row.consumeSource || '-' }}
         </template>
       </el-table-column>
-      <el-table-column align="center" prop="rebateAmount" label="消费返点" width="130">
+      <el-table-column align="center" prop="consumeAmount" label="消费金额" width="130">
         <template slot-scope="scope">
-          <span style="color: #67c23a; font-weight: bold;">{{ scope.row.rebateAmount }} 元</span>
+          <span style="color: #f56c6c; font-weight: bold;">{{ scope.row.consumeAmount }}</span>
+        </template>
+      </el-table-column>
+      <el-table-column align="center" prop="rebateRate" label="返点比例" width="100">
+        <template slot-scope="scope">
+          {{ scope.row.rebateRate }}%
+        </template>
+      </el-table-column>
+      <el-table-column align="center" prop="rebateAmount" label="返点金额" width="130">
+        <template slot-scope="scope">
+          <span style="color: #67c23a; font-weight: bold;">{{ scope.row.rebateAmount }}</span>
+        </template>
+      </el-table-column>
+      <el-table-column align="center" prop="consumeTime" label="消费时间" width="180">
+        <template slot-scope="scope">
+          {{ scope.row.consumeTime || '-' }}
         </template>
       </el-table-column>
       <el-table-column align="center" prop="isDistributed" label="发放状态" width="100">
@@ -67,14 +82,6 @@
           >
             发放返点
           </el-button>
-          <el-button
-            v-if="scope.row.isDistributed === 0"
-            type="text"
-            size="small"
-            @click="handleRecalculate(scope.row)"
-          >
-            重新计算
-          </el-button>
         </template>
       </el-table-column>
     </el-table>
@@ -91,9 +98,8 @@
 
 <script>
 import {
-  getUserVipDailyRecord,
-  distributeRebate,
-  recalculateRebate
+  getVipConsumeRebateRecord,
+  distributeVipRebate
 } from "@/api/skins/ttSetting/api";
 import Pagination from "@/components/Pagination";
 
@@ -122,7 +128,7 @@ export default {
   methods: {
     getList() {
       this.loading = true;
-      getUserVipDailyRecord(this.queryParams).then(res => {
+      getVipConsumeRebateRecord(this.queryParams).then(res => {
         this.tableData = res.rows || [];
         this.total = res.total || 0;
         this.loading = false;
@@ -145,18 +151,10 @@ export default {
       this.getList();
     },
     handleDistribute(row) {
-      this.$modal.confirm('是否确认发放用户ID为"' + row.userId + '"的返点金额"' + row.rebateAmount + '元"？').then(() => {
-        return distributeRebate(row.id);
+      this.$modal.confirm('是否确认发放用户ID为"' + row.userId + '"的返点金额"' + row.rebateAmount + '"？').then(() => {
+        return distributeVipRebate(row.id);
       }).then(() => {
         this.$modal.msgSuccess("发放成功");
-        this.getList();
-      }).catch(() => {});
-    },
-    handleRecalculate(row) {
-      this.$modal.confirm('是否确认重新计算用户ID为"' + row.userId + '"的返点？').then(() => {
-        return recalculateRebate(row.id);
-      }).then(() => {
-        this.$modal.msgSuccess("重新计算成功");
         this.getList();
       }).catch(() => {});
     }

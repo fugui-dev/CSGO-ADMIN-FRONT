@@ -339,10 +339,19 @@ export function distributeRebate(id) {
   })
 }
 
-// 重新计算返点
-export function recalculateRebate(id) {
+// 获取VIP消费返点记录列表
+export function getVipConsumeRebateRecord(params) {
   return request({
-    url: `/admin/userVipDailyRecord/recalculate/${id}`,
+    url: '/admin/vipConsumeRebateRecord/list',
+    method: 'get',
+    params: params
+  })
+}
+
+// 手动发放VIP返点
+export function distributeVipRebate(id) {
+  return request({
+    url: `/admin/vipConsumeRebateRecord/distribute/${id}`,
     method: 'post',
   })
 }
