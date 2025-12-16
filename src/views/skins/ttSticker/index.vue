@@ -45,9 +45,9 @@
         <el-form-item label="贴纸名称" prop="stickerName">
           <el-input v-model="form.stickerName" placeholder="例如：红色贴纸"></el-input>
         </el-form-item>
-        <el-form-item label="绑定网站道具" prop="websiteProperty">
+        <el-form-item label="绑定网站道具" prop="ornamentId">
           <el-select
-            v-model="selectedWebsitePropertyId"
+            v-model="form.ornamentId"
             placeholder="请选择绑定的网站道具"
             filterable
             style="width: 100%"
@@ -123,19 +123,22 @@ export default {
         stickerName: "",
         stickerColor: "",
         stickerImage: "",
+        ornamentId: null,
         stickerType: null,
         description: "",
         status: "0"
       },
       // 绑定的网站道具
       websitePropertyList: [],
-      selectedWebsitePropertyId: null,
       rules: {
         stickerCode: [
           { required: true, message: "请输入贴纸编码", trigger: "blur" }
         ],
         stickerName: [
           { required: true, message: "请输入贴纸名称", trigger: "blur" }
+        ],
+        ornamentId: [
+          { required: true, message: "请选择绑定的网站道具", trigger: "change" }
         ],
         stickerType: [
           { required: true, message: "请选择贴纸类型", trigger: "change" }
@@ -178,11 +181,11 @@ export default {
         stickerName: "",
         stickerColor: "",
         stickerImage: "",
+        ornamentId: null,
         stickerType: null,
         description: "",
         status: "0"
       };
-      this.selectedWebsitePropertyId = null;
       this.dialogFormVisible = true;
       this.$nextTick(() => {
         if (this.$refs.form) {
