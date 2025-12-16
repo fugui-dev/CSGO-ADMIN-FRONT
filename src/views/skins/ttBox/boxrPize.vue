@@ -528,7 +528,7 @@ export default {
         this.orform.pageSize = 999;
         this.orform.pageNum = 1;
         listOrnaments(this.orform).then(res => {
-          this.orList.push.apply(this.orList, res.rows);
+          this.orList.push.apply(this.orList, res.data?.records || []);
         });
       }
     },

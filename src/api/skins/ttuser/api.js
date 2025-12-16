@@ -147,3 +147,19 @@ export function getTransferRecordList(query) {
     params: query
   })
 }
+//转增记录-审核通过
+export function approveTransferRecord(id, auditRemark) {
+  return request({
+    url: '/admin/ornamentTransferRecord/approve/' + id,
+    method: 'post',
+    params: { auditRemark: auditRemark || '' }
+  })
+}
+//转增记录-审核拒绝
+export function rejectTransferRecord(id, auditRemark) {
+  return request({
+    url: '/admin/ornamentTransferRecord/reject/' + id,
+    method: 'post',
+    params: { auditRemark: auditRemark || '' }
+  })
+}
