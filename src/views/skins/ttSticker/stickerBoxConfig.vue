@@ -276,7 +276,8 @@ export default {
     },
     getBoxList() {
       return new Promise((resolve) => {
-        listBox({ status: "0" }).then(res => {
+        // 传递较大的pageSize以获取所有箱子列表
+        listBox({ status: "0", pageNum: 1, pageSize: 10000 }).then(res => {
           this.boxList = res.rows || res.data || [];
           resolve();
         }).catch(() => {
@@ -286,7 +287,8 @@ export default {
     },
     getStickerList() {
       return new Promise((resolve) => {
-        listSticker({ status: "0" }).then(res => {
+        // 传递较大的pageSize以获取所有贴纸列表
+        listSticker({ status: "0", pageNum: 1, pageSize: 10000 }).then(res => {
           this.stickerList = res.rows || res.data || [];
           resolve();
         }).catch(() => {

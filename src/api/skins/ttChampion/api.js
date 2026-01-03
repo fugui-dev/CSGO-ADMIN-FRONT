@@ -36,6 +36,23 @@ export function addCheerApi(data) {
   })
 }
 
+// 更新助威配置
+export function updateCheerApi(data) {
+  return request({
+    url: '/admin/match/stage/cheer/update',
+    method: 'put',
+    data: data
+  })
+}
+
+// 删除助威配置
+export function deleteCheerApi(id) {
+  return request({
+    url: '/admin/match/stage/cheer/' + id,
+    method: 'delete'
+  })
+}
+
 // 获取比赛阶段列表
 export function getMatchStageListApi(data) {
   return request({

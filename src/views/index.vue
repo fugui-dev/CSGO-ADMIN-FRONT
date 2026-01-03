@@ -73,6 +73,9 @@ export default {
       deliveryPriceTotal: [],
       profit: [],
       rechargePriceTotal: [],
+      unusedIncludedCdkTotal: [], // 当日未使用计入CDK总金额
+      unusedExcludedCdkTotal: [], // 当日未使用不计入CDK总金额（信任CDK）
+      statisticsData: [], // 存储完整的统计数据，用于tooltip显示详细信息
       totaldeliver: null,
       totalRecord: Number(0),
       total: null,
@@ -92,6 +95,7 @@ export default {
     draw() {
       var chartDom = document.getElementById("main");
       var myChart = echarts.init(chartDom);
+      var self = this; // 保存Vue实例引用
       var option;
       option = {
         title: {
@@ -101,7 +105,26 @@ export default {
           data: ["充值总金额", "提货总金额", "利润"]
         },
         tooltip: {
-          trigger: "axis"
+          trigger: "axis",
+          formatter: function(params) {
+            let result = params[0].name + '<br/>';
+            params.forEach(function(item) {
+              result += item.marker + item.seriesName + ': ￥' + item.value.toFixed(2) + '<br/>';
+            });
+            // 获取当前日期的详细信息
+            const currentDate = params[0].name;
+            const currentData = self.statisticsData.find(d => d.date === currentDate);
+            if (currentData) {
+              result += '<br/>详细信息：<br/>';
+              result += '当日已使用计入CDK总金额: ￥' + (currentData.usedIncludedCdkTotal || 0).toFixed(2) + '<br/>';
+              result += '当日未使用计入CDK总金额: ￥' + (currentData.unusedIncludedCdkTotal || 0).toFixed(2) + '<br/>';
+              result += '当日已使用不计入CDK总金额: ￥' + (currentData.usedExcludedCdkTotal || 0).toFixed(2) + '<br/>';
+              result += '当日未使用不计入CDK总金额: ￥' + (currentData.unusedExcludedCdkTotal || 0).toFixed(2) + '<br/>';
+              result += '当日已使用新人CDK总金额: ￥' + (currentData.usedNewcomerCdkTotal || 0).toFixed(2) + '<br/>';
+              result += '当日未使用新人CDK总金额: ￥' + (currentData.unusedNewcomerCdkTotal || 0).toFixed(2) + '<br/>';
+            }
+            return result;
+          }
         },
         toolbox: {
           show: true,
@@ -174,7 +197,9 @@ export default {
         this.tableData = res.rows;
         this.totaldeliver = res.total;
       });
-      rechargeRecord(this.queryParams).then(res => {
+      // 首页统计时，排除cardType=1的CDK
+      const queryParamsForHome = { ...this.queryParams, excludeCardType1: true };
+      rechargeRecord(queryParamsForHome).then(res => {
         res.rows.forEach(element => {
           if (element.anchorVirtual != 1){
             this.totalRecord += Number(element.arrivalAmount);
@@ -182,14 +207,36 @@ export default {
         });
       });
       getOperationalStatistics().then(res => {
+        // 清空数据
+        this.date = [];
+        this.deliveryPriceTotal = [];
+        this.profit = [];
+        this.rechargePriceTotal = [];
+        this.unusedIncludedCdkTotal = [];
+        this.unusedExcludedCdkTotal = [];
+        this.statisticsData = [];
 
         res.data.forEach(e => {
-          this.date.push(e.date);
-          this.deliveryPriceTotal.push(e.deliveryPriceTotal);
-          this.profit.push(e.profit);
-          this.rechargePriceTotal.push(e.rechargePriceTotal);
-          this.draw();
+          // 格式化日期为字符串，用于tooltip匹配
+          const dateStr = typeof e.date === 'string' ? e.date : new Date(e.date).toISOString().split('T')[0];
+          this.date.push(dateStr);
+          this.deliveryPriceTotal.push(Number(e.deliveryPriceTotal || 0));
+          this.profit.push(Number(e.profit || 0));
+          this.rechargePriceTotal.push(Number(e.rechargePriceTotal || 0));
+          this.unusedIncludedCdkTotal.push(Number(e.unusedIncludedCdkTotal || 0));
+          this.unusedExcludedCdkTotal.push(Number(e.unusedExcludedCdkTotal || 0));
+          // 保存完整数据
+          this.statisticsData.push({
+            date: dateStr,
+            usedIncludedCdkTotal: Number(e.usedIncludedCdkTotal || 0),
+            unusedIncludedCdkTotal: Number(e.unusedIncludedCdkTotal || 0),
+            usedExcludedCdkTotal: Number(e.usedExcludedCdkTotal || 0),
+            unusedExcludedCdkTotal: Number(e.unusedExcludedCdkTotal || 0),
+            usedNewcomerCdkTotal: Number(e.usedNewcomerCdkTotal || 0),
+            unusedNewcomerCdkTotal: Number(e.unusedNewcomerCdkTotal || 0)
+          });
         });
+        this.draw();
       });
     },
     goTarget(href) {

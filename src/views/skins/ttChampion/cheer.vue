@@ -25,13 +25,29 @@
       <el-table-column align="center" label="助威积分比例" prop="scoreProportion" width="100" />
       <el-table-column align="center" label="创建时间" prop="createTime" width="170" />
       <el-table-column align="center" label="更新时间" prop="updateTime" width="170" />
+      <el-table-column align="center" label="操作" width="180" fixed="right">
+        <template slot-scope="scope">
+          <el-button
+            size="mini"
+            type="text"
+            icon="el-icon-edit"
+            @click="handleUpdate(scope.row)"
+          >编辑</el-button>
+          <el-button
+            size="mini"
+            type="text"
+            icon="el-icon-delete"
+            @click="handleDelete(scope.row)"
+          >删除</el-button>
+        </template>
+      </el-table-column>
     </el-table>
 
     <!-- 创建助威配置 -->
     <el-dialog :title="title" :visible.sync="open" append-to-body width="600px">
       <el-form ref="form" :model="form" :rules="rules" label-width="120px">
         <el-form-item label="阶段类型" prop="type">
-          <el-select v-model="form.type" placeholder="请选择" clearable>
+          <el-select v-model="form.type" placeholder="请选择" clearable :disabled="form.id != null">
             <el-option
               v-for="dict in dict.type.champion_stage_type"
               :key="dict.value"
@@ -56,7 +72,7 @@
 </template>
 
 <script>
-import { getCheerListApi, addCheerApi } from "@/api/skins/ttChampion/api";
+import { getCheerListApi, addCheerApi, updateCheerApi, deleteCheerApi } from "@/api/skins/ttChampion/api";
 
 export default {
   name: "Cheer",
@@ -145,19 +161,57 @@ export default {
       this.open = true;
       this.title = "创建助威配置";
     },
+    /** 修改按钮操作 */
+    handleUpdate(row) {
+      this.reset();
+      const id = row.id;
+      // 深拷贝，避免表单数据被修改
+      this.form = {
+        id: row.id,
+        type: row.type,
+        bonusTimes: parseFloat(row.bonusTimes),
+        scoreProportion: parseFloat(row.scoreProportion)
+      };
+      this.open = true;
+      this.title = "编辑助威配置";
+    },
+    /** 删除按钮操作 */
+    handleDelete(row) {
+      const id = row.id;
+      this.$modal.confirm('是否确认删除助威配置编号为"' + id + '"的数据项？').then(() => {
+        return deleteCheerApi(id);
+      }).then(() => {
+        this.getList();
+        this.$modal.msgSuccess("删除成功");
+      }).catch(() => {});
+    },
     /** 提交按钮 */
     submitForm() {
       this.$refs["form"].validate(valid => {
         if (valid) {
-          addCheerApi(this.form).then(res => {
-            if (res.code === 200) {
-              this.$modal.msgSuccess(res.msg);
-              this.open = false;
-              this.getList();
-            } else {
-              this.$modal.msgError(res.msg);
-            }
-          });
+          if (this.form.id != null) {
+            // 编辑
+            updateCheerApi(this.form).then(res => {
+              if (res.code === 200) {
+                this.$modal.msgSuccess(res.msg || "修改成功");
+                this.open = false;
+                this.getList();
+              } else {
+                this.$modal.msgError(res.msg);
+              }
+            });
+          } else {
+            // 新增
+            addCheerApi(this.form).then(res => {
+              if (res.code === 200) {
+                this.$modal.msgSuccess(res.msg || "新增成功");
+                this.open = false;
+                this.getList();
+              } else {
+                this.$modal.msgError(res.msg);
+              }
+            });
+          }
         }
       });
     }

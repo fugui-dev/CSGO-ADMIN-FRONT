@@ -15,6 +15,22 @@ export function addRechargeCard(rechargeListId,num) {
  })
 }
 
+export function addRechargeCardByAmount(amount, num, cardType, merchantId) {
+  const params = {
+    amount: amount,
+    num: num,
+    cardType: cardType || 0
+  };
+  if (merchantId) {
+    params.merchantId = merchantId;
+  }
+  return request({
+    url: '/admin/rechargeCard/generateCardByAmount',
+    method: 'post',
+    params: params
+  })
+}
+
 export function downloadRechargeCard() {
   return request({
     url: `/admin/rechargeCard/export`,

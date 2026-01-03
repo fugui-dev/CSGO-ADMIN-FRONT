@@ -57,6 +57,19 @@
           </el-option>
         </el-select>
       </el-form-item>
+      <el-form-item label="商人" prop="merchantId">
+        <el-select v-model="queryParams.merchantId" filterable placeholder="请选择商人" clearable>
+          <el-option
+            v-for="item in merchantList"
+            :key="item.id"
+            :label="item.name"
+            :value="item.id"
+          >
+            <span style="float: left">{{ item.name }}</span>
+            <span style="float: right; color: #8492a6; font-size: 13px">{{ item.phone }}</span>
+          </el-option>
+        </el-select>
+      </el-form-item>
       <el-form-item>
         <el-button type="primary" icon="el-icon-search" size="mini" @click="handleQuery">搜索</el-button>
         <el-button icon="el-icon-refresh" size="mini" @click="resetQuery">重置</el-button>
@@ -102,6 +115,24 @@
       <el-table-column align="center" label="卡密" prop="password" />
       <el-table-column align="center" label="金额" prop="price"></el-table-column>
       <el-table-column align="center" label="充值列表ID" prop="rechargeListId" />
+      <el-table-column align="center" label="CDK类型" prop="cardType" width="130">
+        <template slot-scope="scope">
+          <el-tag 
+            :type="getCardTypeTagType(scope.row.cardType)" 
+            size="small"
+          >
+            {{ getCardTypeName(scope.row.cardType) }}
+          </el-tag>
+        </template>
+      </el-table-column>
+      <el-table-column align="center" label="商人" prop="merchantId" width="120">
+        <template slot-scope="scope">
+          <span v-if="scope.row.merchantId">
+            {{ getMerchantName(scope.row.merchantId) }}
+          </span>
+          <span v-else style="color: #909399">未绑定</span>
+        </template>
+      </el-table-column>
       <el-table-column align="center" label="状态" prop="status">
         <template slot-scope="scope">
           <div>
@@ -149,16 +180,33 @@
           <el-form-item label="生成数量" prop="num">
             <el-input-number v-model="form.num" :min="0" :step="1"></el-input-number>
           </el-form-item>
-          <el-form-item label="金额" prop="rechargeListId">
-            <el-select v-model="form.rechargeListId" filterable placeholder="请选择充值列表ID" clearable>
+          <el-form-item label="金额" prop="amount">
+            <el-input-number
+              v-model="form.amount"
+              :min="0.01"
+              :precision="2"
+              :step="0.01"
+              placeholder="请输入CDK金额"
+              style="width: 100%"
+            />
+          </el-form-item>
+          <el-form-item label="CDK类型" prop="cardType">
+            <el-select v-model="form.cardType" placeholder="请选择CDK类型" style="width: 100%">
+              <el-option label="计入充值统计" :value="0"></el-option>
+              <el-option label="不计入充值统计" :value="1"></el-option>
+              <el-option label="新人卡密" :value="2"></el-option>
+            </el-select>
+          </el-form-item>
+          <el-form-item label="绑定商人" prop="merchantId">
+            <el-select v-model="form.merchantId" placeholder="请选择商人（可选）" clearable style="width: 100%">
               <el-option
-                v-for="item in rechangeList"
+                v-for="item in merchantList"
                 :key="item.id"
-                :label="item.price"
+                :label="item.name"
                 :value="item.id"
               >
-                <span style="float: left">{{ item.price }}</span>
-                <span style="float: right; color: #8492a6; font-size: 13px">{{ item.id }}</span>
+                <span style="float: left">{{ item.name }}</span>
+                <span style="float: right; color: #8492a6; font-size: 13px">{{ item.phone }}</span>
               </el-option>
             </el-select>
           </el-form-item>
@@ -181,11 +229,13 @@
 import {
   getRechargeCard,
   addRechargeCard,
+  addRechargeCardByAmount,
   delRechargeCard
 } from "@/api/skins/ttGenerateCard/api";
 import { getRechargeList } from "@/api/skins/ttRecharge/api";
 import { listUser } from "@/api/skins/ttuser/api";
 import { getInfo } from "@/api/login";
+import { getAllMerchants } from "@/api/skins/ttMerchant/api";
 export default {
   dicts: [
     "shopping_isputaway_status",
@@ -215,6 +265,7 @@ export default {
       },
       dialogFormVisible: false,
       userList: [],
+      merchantList: [],
       loadings: false,
       isSystemOperation: false, // 是否为system-operation角色
       types: {
@@ -256,17 +307,25 @@ export default {
         rechargeListId: null,
         status: null,
         useUserId: null,
-        parentId: null
+        parentId: null,
+        merchantId: null
       },
       // 表单参数
       form: {
-        num: 0
+        num: 0,
+        amount: null,
+        cardType: 0, // 默认计入统计
+        merchantId: null // 商人ID
       },
       // 表单校验
       rules: {
         num: [{ required: true, message: "请输入生成数量", trigger: "change" }],
-        rechargeListId: [
-          { required: true, message: "请选择充值列表", trigger: "change" }
+        amount: [
+          { required: true, message: "请输入CDK金额", trigger: "change" },
+          { type: "number", min: 0.01, message: "金额必须大于0", trigger: "change" }
+        ],
+        cardType: [
+          { required: true, message: "请选择CDK类型", trigger: "change" }
         ]
       },
       ruless: {
@@ -284,6 +343,7 @@ export default {
     this.checkUserRole();
     this.getList();
     this.getRechargeList();
+    this.getMerchantList();
     // 延迟获取用户列表，确保用户信息已加载
     this.$nextTick(() => {
       this.getUser();
@@ -347,6 +407,14 @@ export default {
         this.rechangeList = res.rows;
       });
     },
+    // 获取商人列表
+    getMerchantList() {
+      getAllMerchants().then(res => {
+        if (res.code === 200) {
+          this.merchantList = res.data || [];
+        }
+      });
+    },
     cancellation(formName) {
       this.dialogFormVisible = false;
       this.$refs[formName].resetFields();
@@ -364,17 +432,32 @@ export default {
                   this.getList();
                 });
               } else {
+                // 直接根据金额和类型生成CDK，不再需要查找充值列表ID
                 this.loadingadd = true;
-                addRechargeCard(this.form.rechargeListId, this.form.num).then(
+                const params = {
+                  amount: this.form.amount,
+                  num: this.form.num,
+                  cardType: this.form.cardType || 0
+                };
+                if (this.form.merchantId) {
+                  params.merchantId = this.form.merchantId;
+                }
+                addRechargeCardByAmount(params.amount, params.num, params.cardType, params.merchantId).then(
                   response => {
                     this.loadingadd = false;
-                    this.status = 2;
-                    this.overList = response.data;
-                    this.$modal.msgSuccess("新增成功");
-                    // this.open = false;
-                    this.getList();
+                    if (response.code === 200) {
+                      this.status = 2;
+                      this.overList = response.data || [];
+                      this.$modal.msgSuccess("新增成功");
+                      this.getList();
+                    } else {
+                      this.$modal.msgError(response.msg || "生成CDK失败");
+                    }
                   }
-                );
+                ).catch(error => {
+                  this.loadingadd = false;
+                  this.$modal.msgError("生成CDK失败：" + (error.msg || error.message || "未知错误"));
+                });
               }
             }
           });
@@ -471,7 +554,10 @@ export default {
     // 表单重置
     reset() {
       this.form = {
-        num: 0
+        num: 0,
+        amount: null,
+        cardType: 0, // 默认计入统计
+        merchantId: null
       };
       this.resetForm("form");
     },
@@ -509,6 +595,33 @@ export default {
         this.getList();
         this.$modal.msgSuccess("删除成功");
       }).catch(() => {});
+    },
+    /** 获取CDK类型名称 */
+    getCardTypeName(cardType) {
+      if (cardType === 0 || cardType === '0') {
+        return '计入统计';
+      } else if (cardType === 1 || cardType === '1') {
+        return '不计入统计';
+      } else if (cardType === 2 || cardType === '2') {
+        return '新人卡密';
+      }
+      return '未知';
+    },
+    /** 获取CDK类型标签样式 */
+    getCardTypeTagType(cardType) {
+      if (cardType === 0 || cardType === '0') {
+        return 'success';
+      } else if (cardType === 1 || cardType === '1') {
+        return 'info';
+      } else if (cardType === 2 || cardType === '2') {
+        return 'warning';
+      }
+      return '';
+    },
+    /** 获取商人名称 */
+    getMerchantName(merchantId) {
+      const merchant = this.merchantList.find(item => item.id === merchantId);
+      return merchant ? merchant.name : '';
     }
   }
 };

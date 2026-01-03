@@ -41,6 +41,17 @@
         <el-button icon="el-icon-refresh" size="mini" @click="resetQuery">重置</el-button>
       </el-form-item>
     </el-form>
+    <el-row :gutter="10" class="mb8">
+      <el-col :span="1.5">
+        <el-button
+          type="primary"
+          icon="el-icon-refresh"
+          size="mini"
+          :loading="batchSyncLoading"
+          @click="handleBatchSync"
+        >一键同步当前页</el-button>
+      </el-col>
+    </el-row>
     <right-toolbar :showSearch.sync="showSearch" @queryTable="getList"></right-toolbar>
     <el-table :data="tableData" style="width: 100%" v-loading="loading">
       <el-table-column align="center" prop="id" label="Id" width="50"></el-table-column>
@@ -165,6 +176,7 @@ export default {
     return {
       ornamentsId: null,
       loading: false,
+      batchSyncLoading: false, // 批量同步加载状态
       total: 1,
       showSearch: true,
       tableData: [],
@@ -190,6 +202,53 @@ export default {
       };
       synchronousStatus(aa).then(res => {
         this.getList();
+      });
+    },
+    /** 一键同步当前页 */
+    handleBatchSync() {
+      if (!this.tableData || this.tableData.length === 0) {
+        this.$modal.msgWarning("当前页没有数据");
+        return;
+      }
+      
+      this.$modal.confirm('确定要同步当前页的所有记录吗？').then(() => {
+        this.batchSyncLoading = true;
+        let successCount = 0;
+        let failCount = 0;
+        let totalCount = this.tableData.length;
+        let completedCount = 0;
+        
+        // 逐个同步
+        const syncPromises = this.tableData.map((row, index) => {
+          return synchronousStatus({ outTradeNo: row.outTradeNo })
+            .then(() => {
+              successCount++;
+              completedCount++;
+            })
+            .catch((error) => {
+              failCount++;
+              completedCount++;
+              console.error(`同步订单 ${row.outTradeNo} 失败:`, error);
+            });
+        });
+        
+        // 等待所有同步完成
+        Promise.all(syncPromises).then(() => {
+          this.batchSyncLoading = false;
+          let message = `同步完成！成功：${successCount}条，失败：${failCount}条，总计：${totalCount}条`;
+          if (failCount === 0) {
+            this.$modal.msgSuccess(message);
+          } else {
+            this.$modal.msgWarning(message);
+          }
+          // 刷新列表
+          this.getList();
+        }).catch(() => {
+          this.batchSyncLoading = false;
+          this.$modal.msgError("批量同步过程中发生错误");
+        });
+      }).catch(() => {
+        // 用户取消
       });
     },
     resetQuery() {

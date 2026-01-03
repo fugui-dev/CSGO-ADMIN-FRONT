@@ -83,7 +83,6 @@
   </div>
 </template>
 <script>
-import { listUser } from "@/api/skins/ttuser/api";
 import {
   getRollPrizeList,
   namedWinner,
@@ -100,7 +99,8 @@ export default {
       formAdd: {},
       orOnselects: {},
       orform: {},
-      userList: {},
+      userList: null,
+      allRollUsers: [], // 保存roll房内所有用户，用于本地搜索过滤
       id: Number(this.$route.query.id),
       tableData: [],
       total: 0,
@@ -129,13 +129,18 @@ export default {
         if (aa == false) {
           this.form = {};
           this.getList();
+          // 关闭弹框时重置搜索条件
+          this.queryParams.nickName = null;
+          this.userList = null;
+        } else {
+          // 打开弹框时加载roll房内所有用户
+          this.loadAllRollUsers();
         }
       }
     }
   },
   mounted() {
     this.getList();
-    this.serchornaments();
   },
   methods: {
     addOr(res) {
@@ -167,16 +172,48 @@ export default {
         });
       }
     },
-    serchornaments() {
+    // 加载roll房内所有用户
+    loadAllRollUsers() {
       this.loadings = true;
-      listUser(this.queryParams).then(response => {
-        this.userList = response.rows;
+      getzhidinguser(this.id).then(response => {
+        this.allRollUsers = response.data || [];
         this.loadings = false;
+        // 加载完成后执行搜索过滤
+        this.filterUsers();
+      }).catch(() => {
+        this.allRollUsers = [];
+        this.loadings = false;
+        this.userList = [];
       });
-      // getzhidinguser(this.id).then(response => {
-      //   this.userList = response.data;
-      //   this.loadings = false;
-      // });
+    },
+    // 搜索过滤roll房内用户
+    serchornaments() {
+      // 如果还没有加载过roll房用户列表，先加载
+      if (this.allRollUsers.length === 0 && this.userList === null) {
+        this.loadAllRollUsers();
+        return;
+      }
+      
+      // 执行过滤
+      this.filterUsers();
+    },
+    // 根据搜索关键词过滤用户列表
+    filterUsers() {
+      const searchKeyword = this.queryParams.nickName;
+      
+      // 如果没有搜索关键词，显示所有roll房内用户
+      if (!searchKeyword || searchKeyword.trim() === '') {
+        this.userList = this.allRollUsers;
+        return;
+      }
+      
+      // 根据昵称或用户名进行本地过滤
+      const keyword = searchKeyword.trim().toLowerCase();
+      this.userList = this.allRollUsers.filter(user => {
+        const nickName = (user.nickName || '').toLowerCase();
+        const userName = (user.userName || '').toLowerCase();
+        return nickName.includes(keyword) || userName.includes(keyword);
+      });
     },
 
     handleAppoint(res) {
@@ -185,19 +222,10 @@ export default {
       this.dialogFormVisible = true;
       this.form = res;
     },
+    // 滚动加载已移除，因为我们已经一次性加载了所有roll房内用户
     scrollEventFn(e) {
-      if (
-        e.srcElement.scrollTop + e.srcElement.clientHeight >=
-        e.srcElement.scrollHeight
-      ) {
-        this.queryParams.pageNum += 1;
-        // listUser(this.queryParams).then(res => {
-        //   this.userList.push.apply(this.userList, res.rows);
-        // });
-        getzhidinguser(this.id).then(res => {
-          this.userList.push.apply(this.userList, res.data);
-        });
-      }
+      // 由于已经加载了所有roll房内用户，不需要滚动加载
+      // 如果需要分页，可以在这里实现前端分页逻辑
     },
     getList() {
       this.loading = true;

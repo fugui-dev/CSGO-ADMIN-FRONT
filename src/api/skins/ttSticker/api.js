@@ -131,3 +131,39 @@ export function delStickerReward(ids) {
     method: 'delete'
   })
 }
+
+// 贴纸兑换奖励记录
+// 查询贴纸兑换奖励记录列表
+export function listStickerExchangeRecord(query) {
+  return request({
+    url: '/admin/stickerExchangeRecord/list',
+    method: 'get',
+    params: query
+  })
+}
+
+// 查询贴纸兑换奖励记录详情
+export function getStickerExchangeRecord(id) {
+  return request({
+    url: `/admin/stickerExchangeRecord/${id}`,
+    method: 'get'
+  })
+}
+
+// 贴纸获取记录
+// 查询贴纸获取记录列表
+export function listStickerObtainRecord(query) {
+  return request({
+    url: '/admin/stickerObtainRecord/list',
+    method: 'get',
+    params: query
+  })
+}
+
+// 查询贴纸获取记录详情
+export function getStickerObtainRecord(id) {
+  return request({
+    url: `/admin/stickerObtainRecord/${id}`,
+    method: 'get'
+  })
+}
